@@ -9,6 +9,9 @@ public abstract class P2P {
     protected final short  WIFIDIRECT = 0;
     protected final short BLUETOOTH = 1;
     protected final  String TAG_DEBUG = "ayanda_bug";
+
+    // announce service
+    protected abstract void announce();
     // Discover nearby Peer
     public abstract void discover();
     // Connect to a Peer

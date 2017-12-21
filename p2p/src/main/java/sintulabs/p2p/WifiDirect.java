@@ -14,7 +14,9 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,6 +39,9 @@ public class WifiDirect {
     public final static String SERVICE_INSTANCE = "ayanda";
     public final static String SERVICE_REG_TYPE = "_presence._tcp";
 
+    ArrayList<WifiP2pDevice> devices = new ArrayList<>();
+    private List peers = new ArrayList();
+
     private void createIntent() {
         intentFilter = new IntentFilter();
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -52,28 +57,28 @@ public class WifiDirect {
         // IntentFilter for receiver
         createIntent();
         createReceiver();
-        discoverPeers();
+        announceWiFiDirectService();
+        discoverServices();
 
     }
 
     // Announce Wifi Direct service
     private void announceWiFiDirectService() {
-        Log.d(TAG_DEBUG, "Setting up ServiceAnnouncment");
+        Log.d("TAG", "Setting up ServiceAnnouncment");
         Map<String, String> txtRecords = new HashMap<String, String>();
 
-        txtRecords.put("identity_instance", SERVICE_INSTANCE);
-        txtRecords.put("port", Integer.toString(PORT));
+        txtRecords.put("identity_instance", "aya");
+        txtRecords.put("port", Integer.toString(8080));
         txtRecords.put("device_id", "ay_" + (int) (Math.random() * 1000));
 
         // Create Service Info Object containing the service details
-        serviceInfo = WifiP2pDnsSdServiceInfo.newInstance(SERVICE_INSTANCE, SERVICE_REG_TYPE, txtRecords);
+        serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("_test", "_presence._tcp", txtRecords);
         // Publish local service SERVICE_INSTANCE with Service Tye  _http._tcp
         wifiP2pManager.addLocalService(wifiDirectChannel, serviceInfo,
                 new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
                         Log.d(TAG_DEBUG, "Service announcing !");
-                        writeMessage("Service announcing !");
                     }
 
                     @Override
@@ -82,6 +87,60 @@ public class WifiDirect {
                         writeMessage("Service announcement failed: " + i);
                     }
                 });
+    }
+
+    private void discoverServices() {
+        // Listener to examine actual service
+        WifiP2pManager.DnsSdServiceResponseListener serviceResponseListener = new WifiP2pManager.DnsSdServiceResponseListener() {
+            @Override
+            public void onDnsSdServiceAvailable(String instanceName, String registrationType, WifiP2pDevice device) {
+                Log.d(TAG_DEBUG, "instanceName: " + instanceName + ", registrationType " + registrationType);
+            }
+        };
+
+        // Listener to examine Text records
+        WifiP2pManager.DnsSdTxtRecordListener txtRecordListener = new WifiP2pManager.DnsSdTxtRecordListener() {
+            @Override
+            public void onDnsSdTxtRecordAvailable(String s, Map<String, String> record, WifiP2pDevice device) {
+                devices.add(device);
+                peers.addAll(devices);
+                Message m = Message.obtain();
+                m.obj = peers;
+                // TODO add device friendly name
+                peerHandler.sendMessage(m);
+                Log.d(TAG_DEBUG, "DnsSdTxtRecord available -" + record.toString());
+            }
+        };
+
+        wifiP2pManager.setDnsSdResponseListeners(wifiDirectChannel, serviceResponseListener, txtRecordListener);
+
+        // request service
+        serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
+
+        wifiP2pManager.addServiceRequest(wifiDirectChannel, serviceRequest, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG_DEBUG, "sent service request");
+            }
+
+            @Override
+            public void onFailure(int i) {
+                Log.d(TAG_DEBUG, "unable to send service request. Code: " + String.valueOf(i));
+            }
+
+        });
+
+        wifiP2pManager.discoverServices(wifiDirectChannel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int i) {
+                Log.d(TAG_DEBUG, "Unable to call disoverServices. code: " + String.valueOf(i));
+            }
+        });
     }
 
 
@@ -108,22 +167,6 @@ public class WifiDirect {
     public void unregisterReceiver() {
         context.unregisterReceiver(receiver);
     }
-
-    // look for nearby peers
-    private void discoverPeers() {
-        wifiP2pManager.discoverPeers(wifiDirectChannel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reasonCode) {
-                Log.d("Debug", "failed to look for pears: " + reasonCode);
-            }
-        });
-    }
-
 
     public void connect(WifiP2pDevice device) {
         // Picking the first device found on the network.
