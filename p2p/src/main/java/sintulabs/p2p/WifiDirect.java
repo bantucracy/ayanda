@@ -57,15 +57,18 @@ public class WifiDirect extends P2P {
         // IntentFilter for receiver
         createIntent();
         createReceiver();
+
         announce();
         discover();
+
 
     }
 
     // Announce Wifi Direct service
+
     @Override
     public void announce() {
-        Log.d("TAG", "Setting up ServiceAnnouncment");
+;
         Map<String, String> txtRecords = new HashMap<String, String>();
 
         txtRecords.put("identity_instance", "aya");
@@ -93,6 +96,7 @@ public class WifiDirect extends P2P {
     // Discover service
     @Override
     public void discover() {
+
         // Listener to examine actual service
         WifiP2pManager.DnsSdServiceResponseListener serviceResponseListener = new WifiP2pManager.DnsSdServiceResponseListener() {
             @Override
