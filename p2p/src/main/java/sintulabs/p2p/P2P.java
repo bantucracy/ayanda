@@ -9,14 +9,17 @@ public abstract class P2P {
     protected final short  WIFIDIRECT = 0;
     protected final short BLUETOOTH = 1;
     protected final  String TAG_DEBUG = "ayanda_bug";
+
+    // announce service
+    protected abstract void announce();
     // Discover nearby Peer
-    public abstract void discover();
+    protected abstract void discover();
     // Connect to a Peer
-    public abstract void connect();
+    protected abstract void connect(String host, String port);
     // Disconnect from a peer
-    public abstract void disconnect();
+    protected abstract void disconnect();
     // Send file to peer
-    public abstract void send();
+    protected abstract void send();
     // Cancel file transfer in progress
-    public abstract void cancel();
+    protected abstract void cancel();
 }
