@@ -5,7 +5,9 @@ import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 
 /**
  * Created by sabzo on 12/26/17.
@@ -13,21 +15,92 @@ import java.net.InetAddress;
 
 public class Lan extends P2P{
     // constants for identifying service and service type
-    public final static String SERVICE_NAME_DEFAULT = "NSDNearbyShare";
+    public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
-
-    private NsdManager mNsdManager;
+    // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
     private NsdManager.ResolveListener mResolveListener;
+    // For announcing service
+    private int mLocalPort;
+    private Context mContext;
+    private String mServiceName;
+    private NsdManager.RegistrationListener mRegistrationListener;
+
+    private NsdManager mNsdManager;
 
     public Lan(Context context) {
+        mContext = context;
         mNsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
     }
 
     @Override
     public void announce() {
+        // Create the NsdServiceInfo object, and populate it.
+        NsdServiceInfo serviceInfo  = new NsdServiceInfo();
+        int port = 0;
+        try {
+            port = findOpenSocket();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // The name is subject to change based on conflicts
+        // with other services advertised on the same network.
+        serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
+        serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setPort(port);
 
+        mNsdManager = (NsdManager)mContext.getSystemService(Context.NSD_SERVICE);
+
+        if (mRegistrationListener == null)
+            initializeRegistrationListener();
+
+        mNsdManager.registerService(
+                serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
     }
+
+    private void initializeRegistrationListener() {
+        mRegistrationListener = new NsdManager.RegistrationListener() {
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo NsdServiceInfo) {
+                // Save the service name.  Android may have changed it in order to
+                // resolve a conflict, so update the name you initially requested
+                // with the name Android actually used.
+                mServiceName = NsdServiceInfo.getServiceName();
+            }
+
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Registration failed!  Put debugging code here to determine why.
+                Log.e(TAG_DEBUG, "Error registering service " + Integer.toString(errorCode));
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo arg0) {
+                // Service has been unregistered.  This only happens when you call
+                // NsdManager.unregisterService() and pass in this listener.
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Unregistration failed.  Put debugging code here to determine why.
+            }
+        };
+    }
+
+    private int findOpenSocket() throws java.io.IOException {
+        // Initialize a server socket on the next available port.
+        ServerSocket serverSocket = new ServerSocket(0);
+
+        // Store the chosen port.
+        mLocalPort =  serverSocket.getLocalPort();
+        serverSocket.close();
+
+        return mLocalPort;
+    }
+
+
+    /* Discover service */
 
     @Override
     public void discover() {
@@ -77,13 +150,8 @@ public class Lan extends P2P{
                         }
                     });
                 }
-                startDiscovery();
             }
 
-            private void startDiscovery() {
-                mNsdManager.discoverServices(
-                        SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
-            }
 
             @Override
             public void onServiceLost(NsdServiceInfo service) {
@@ -111,11 +179,12 @@ public class Lan extends P2P{
         };
 
         //start discovery
+        startDiscovery();
     }
 
-    @Override
-    public void connect(String host, String port) {
-
+    private void startDiscovery() {
+        mNsdManager.discoverServices(
+                SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
     }
 
     @Override
