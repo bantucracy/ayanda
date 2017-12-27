@@ -22,4 +22,5 @@ public abstract class P2P {
     protected abstract void send();
     // Cancel file transfer in progress
     protected abstract void cancel();
+
 }
