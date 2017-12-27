@@ -74,7 +74,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                         peers.addAll(peerList.getDeviceList());
                         Message m = Message.obtain();
                         m.obj = peers;
-                        peerHandler.sendMessage(m);
+                        // TODO secondary Filter of devices with registered service
+                        //peerHandler.sendMessage(m);
                         // find PiDroid SSID
                         for (int i = 0; i < peers.size(); i++) {
                             WifiP2pDevice dev = (WifiP2pDevice) peers.get(i);
