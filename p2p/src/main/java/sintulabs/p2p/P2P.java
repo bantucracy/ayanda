@@ -14,8 +14,7 @@ public abstract class P2P {
     protected abstract void announce();
     // Discover nearby Peer
     protected abstract void discover();
-    // Connect to a Peer
-    protected abstract void connect(String host, String port);
+
     // Disconnect from a peer
     protected abstract void disconnect();
     // Send file to peer

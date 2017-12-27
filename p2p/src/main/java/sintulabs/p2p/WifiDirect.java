@@ -167,10 +167,6 @@ public class WifiDirect extends P2P {
         });
     }
 
-    @Override
-    public void connect(String host, String port) {
-
-    }
 
     @Override
     public void disconnect() {
