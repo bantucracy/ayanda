@@ -41,7 +41,8 @@ public class Lan extends P2P{
         try {
             port = findOpenSocket();
         } catch (IOException e) {
-            e.printStackTrace();        }
+            e.printStackTrace();
+        }
         // The name is subject to change based on conflicts
         // with other services advertised on the same network.
         serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
