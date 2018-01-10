@@ -1,3 +1,5 @@
+package sample;
+
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -22,7 +25,7 @@ import sintulabs.p2p.WifiDirect;
  * Created by sabzo on 1/10/18.
  */
 
-public class MainActivity extends AppCompatActivity {
+public class ActivityMain extends AppCompatActivity {
 
 
     private WifiDirect p2p;
@@ -31,26 +34,36 @@ public class MainActivity extends AppCompatActivity {
     private List peerNames = new ArrayList();
     private ArrayAdapter<String> peersAdapter = null;
     private Handler peerHandler;
-
+    // Buttons
+    private Button btnLanAnnounce;
+    private Button btnLanDiscover;
+    // LAN
+    Lan lan;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Lan lan = new Lan(this);
-        lan.announce();
-        //lan.discover();
-
-
+        createView();
+        setHandler();
+        setListeners();
+        // p2p = new WifiDirect(null, null, this, peerHandler);
+        lan = new Lan(this);
     }
+
 
     private void createView() {
         setContentView(R.layout.activity_main);
+        //toolbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        // buttons
+        btnLanAnnounce = (Button) findViewById(R.id.btnLanAnnounce);
+        btnLanDiscover = (Button) findViewById(R.id.btnLanDiscover);
+        // ListView
         lvDevices = (ListView) findViewById(R.id.lvDevices);
         peersAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, peerNames);
         lvDevices.setAdapter(peersAdapter);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
     }
+
 
     private void setHandler() {
         peerHandler = new Handler(new Handler.Callback() {
@@ -71,27 +84,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        lvDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        View.OnClickListener btnClick = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switch (view.getId()) {
+                    case R.id.btnLanAnnounce:
+                        lan.announce();
+                        break;
+                    case R.id.btnLanDiscover:
+                        lan.discover();
+                        break;
+                }
+            }
+        };
+
+        btnLanAnnounce.setOnClickListener(btnClick);
+        btnLanDiscover.setOnClickListener(btnClick);
+
+        /*lvDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
                 WifiP2pDevice device = (WifiP2pDevice) peers.get(pos);
                 p2p.connect(device);
             }
-        });
+        }); */
     }
 
     /* register the broadcast receiver with the intent values to be matched */
     @Override
     protected void onResume() {
         super.onResume();
-
+        //p2p.registerReceivers();
     }
 
     /* unregister the broadcast receiver */
     @Override
     protected void onPause() {
         super.onPause();
-        }
+        // p2p.unregisterReceiver();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Ayanda</string>
     <string name="action_settings">Settings</string>
+    <!-- Buttons -->
+    <string name="btn_lan_announce">Announce on LAN</string>
+    <string name="btn_lan_discover">Discover on LAN</string>
+    <string name="btn_wifi_direct_announce">Wifi Direct Announce</string>
+    <string name="btn_wifi_direct_discover">Wifi Direct Discover</string>
+    <string name="btn_bluetooth_announce">Announce by Bluetooth</string>
+    <string name="btn_bluetooth_discover">Discover by Bluetooth</string>
 </resources>

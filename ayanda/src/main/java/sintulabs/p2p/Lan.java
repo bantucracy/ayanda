@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -42,7 +43,7 @@ public class Lan extends P2P{
             port = findOpenSocket();
         } catch (IOException e) {
             e.printStackTrace();        }
-        // The name is subject to change based on conflicts
+        // The name is   subject to change based on conflicts
         // with other services advertised on the same network.
         serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
         serviceInfo.setServiceType(SERVICE_TYPE);
@@ -123,6 +124,7 @@ public class Lan extends P2P{
                 // A service was found!  Do something with it.
                 Log.d(TAG_DEBUG, "Service discovery success" + service);
 
+
                 if (!service.getServiceType().equals(SERVICE_TYPE)) {
                     // Service type is the string containing the protocol and
                     // transport layer for this service.
@@ -144,7 +146,7 @@ public class Lan extends P2P{
 
                             int port = serviceInfo.getPort();
                             InetAddress host = serviceInfo.getHost();
-
+                            Toast.makeText(mContext, "Discovered Service: " + serviceInfo, Toast.LENGTH_LONG).show();
                             //connect(host, port);
                         }
                     });
