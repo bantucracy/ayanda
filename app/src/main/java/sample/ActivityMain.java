@@ -1,9 +1,14 @@
 package sample;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -13,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +37,8 @@ public class ActivityMain extends AppCompatActivity {
     private WifiDirect p2p;
     private ListView lvDevices;
     private List peers = new ArrayList();
-    private List peerNames = new ArrayList();
     private ArrayAdapter<String> peersAdapter = null;
+    private List peerNames = new ArrayList();
     private Handler peerHandler;
     // Buttons
     private Button btnLanAnnounce;
@@ -45,6 +51,7 @@ public class ActivityMain extends AppCompatActivity {
         createView();
         setHandler();
         setListeners();
+        registerReceivers();
         // p2p = new WifiDirect(null, null, this, peerHandler);
         lan = new Lan(this);
     }
@@ -70,7 +77,7 @@ public class ActivityMain extends AppCompatActivity {
             @Override
             public boolean handleMessage(Message msg) {
                 peers.clear();
-                // TODO fix error when WiFi off
+                //
                 peers.addAll((List<WifiP2pDevice>) msg.obj);
                 peerNames.clear();
                 for (int i = 0; i < peers.size(); i++) {
@@ -138,6 +145,28 @@ public class ActivityMain extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    // Define the callback for what to do when data is received
+    private BroadcastReceiver testReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            peers.clear();
+            peerNames.clear();
+
+            peers.addAll(lan.getDeviceList());
+            for (int i = 0; i < peers.size(); i++) {
+                Lan.Device d = (Lan.Device) peers.get(i);
+                peersAdapter.add(d.getName());
+            }
+        }
+
+    };
+
+    private void registerReceivers() {
+        // Register for the particular broadcast based on ACTION string
+        IntentFilter filter = new IntentFilter(Lan.LAN_DEVICE_NUM_UPDATE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(testReceiver, filter);
     }
 
 }

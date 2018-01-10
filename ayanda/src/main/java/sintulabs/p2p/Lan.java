@@ -1,14 +1,18 @@
 package sintulabs.p2p;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by sabzo on 12/26/17.
@@ -18,6 +22,7 @@ public class Lan extends P2P{
     // constants for identifying service and service type
     public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
+    public final static String LAN_DEVICE_NUM_UPDATE = "AYANDA_LAN_DEVICE_UPDATE";
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
     private NsdManager.ResolveListener mResolveListener;
@@ -29,9 +34,12 @@ public class Lan extends P2P{
 
     private NsdManager mNsdManager;
 
+    private List<Device> deviceList;
+
     public Lan(Context context) {
         mContext = context;
         mNsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
+        deviceList = new ArrayList<>();
     }
 
     @Override
@@ -56,6 +64,7 @@ public class Lan extends P2P{
 
         mNsdManager.registerService(
                 serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+        Log.d(TAG_DEBUG, "Announcing on LAN");
     }
 
     private void initializeRegistrationListener() {
@@ -116,7 +125,6 @@ public class Lan extends P2P{
             @Override
             public void onDiscoveryStarted(String regType) {
                 Log.d(TAG_DEBUG, "LAN Service discovery started");
-
             }
 
             @Override
@@ -124,13 +132,9 @@ public class Lan extends P2P{
                 // A service was found!  Do something with it.
                 Log.d(TAG_DEBUG, "Service discovery success" + service);
 
-
-                if (!service.getServiceType().equals(SERVICE_TYPE)) {
-                    // Service type is the string containing the protocol and
-                    // transport layer for this service.
-                    //    Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-
-                } else if (service.getServiceName  ().contains(SERVICE_NAME_DEFAULT)) {
+                // Make sure service is the expect type and name
+                if ( service.getServiceType().equals(SERVICE_TYPE) &&
+                        service.getServiceName().contains(SERVICE_NAME_DEFAULT)) {
 
                     mNsdManager.resolveService(service, new NsdManager.ResolveListener() {
 
@@ -146,14 +150,20 @@ public class Lan extends P2P{
 
                             int port = serviceInfo.getPort();
                             InetAddress host = serviceInfo.getHost();
+
+                            updateLanList(new Device(host, port));
                             Toast.makeText(mContext, "Discovered Service: " + serviceInfo, Toast.LENGTH_LONG).show();
-                            //connect(host, port);
                         }
                     });
                 }
             }
 
 
+            private void updateLanList(Device device) {
+                deviceList.add(device);
+                Intent in = new Intent(LAN_DEVICE_NUM_UPDATE);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(in);
+            }
             @Override
             public void onServiceLost(NsdServiceInfo service) {
                 // When the network service is no longer available.
@@ -188,6 +198,9 @@ public class Lan extends P2P{
                 SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
     }
 
+    public void connect(InetAddress host, Integer port) {
+
+    }
     @Override
     public void disconnect() {
 
@@ -200,6 +213,30 @@ public class Lan extends P2P{
 
     @Override
     public void cancel() {
+
+    }
+
+    public List<Device> getDeviceList() {
+        return deviceList;
+    }
+    public static class Device {
+        private InetAddress host;
+        private Integer port;
+
+        public Device(InetAddress host, Integer port) {
+            this.host = host;
+            this.port = port;
+        }
+
+        public InetAddress getHost() {
+            return host;
+        }
+        public Integer getPort() {
+            return port;
+        }
+        public String getName() {
+            return host.toString() + ":" + Integer.toString(port);
+        }
 
     }
 }
