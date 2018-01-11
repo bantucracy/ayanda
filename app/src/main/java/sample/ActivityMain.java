@@ -169,4 +169,17 @@ public class ActivityMain extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(testReceiver, filter);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        lan.stopAnnouncement();
+        lan.stopDiscovery();
+    }
+
+    public void writeMessage(String msg) {
+        Message message = Message.obtain();
+        message.obj = msg;
+        peerHandler.sendMessage(message);
+    }
+
 }

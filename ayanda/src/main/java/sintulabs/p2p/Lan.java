@@ -33,6 +33,7 @@ public class Lan extends P2P{
     private NsdManager.RegistrationListener mRegistrationListener;
 
     private NsdManager mNsdManager;
+    private Boolean serviceAnnounced;
 
     private List<Device> deviceList;
 
@@ -40,6 +41,7 @@ public class Lan extends P2P{
         mContext = context;
         mNsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         deviceList = new ArrayList<>();
+        serviceAnnounced = false;
     }
 
     @Override
@@ -62,10 +64,19 @@ public class Lan extends P2P{
         if (mRegistrationListener == null)
             initializeRegistrationListener();
 
-        mNsdManager.registerService(
-                serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-        Log.d(TAG_DEBUG, "Announcing on LAN");
+        String msg;
+        if (!serviceAnnounced) {
+            mNsdManager.registerService(
+                    serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+            msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(port);
+        } else {
+            msg = "Service already announced";
+        }
+
+        Log.d(TAG_DEBUG, msg);
+        Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
     }
+
 
     private void initializeRegistrationListener() {
         mRegistrationListener = new NsdManager.RegistrationListener() {
@@ -76,12 +87,15 @@ public class Lan extends P2P{
                 // resolve a conflict, so update the name you initially requested
                 // with the name Android actually used.
                 mServiceName = NsdServiceInfo.getServiceName();
+                serviceAnnounced = true;
             }
 
             @Override
             public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 // Registration failed!  Put debugging code here to determine why.
                 Log.e(TAG_DEBUG, "Error registering service " + Integer.toString(errorCode));
+                mRegistrationListener = null; // Allow service to be reinitialized
+                serviceAnnounced = false; // Allow service to be re-announced
             }
 
             @Override
@@ -196,6 +210,18 @@ public class Lan extends P2P{
     private void startDiscovery() {
         mNsdManager.discoverServices(
                 SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+    }
+
+    public void stopDiscovery() {
+        if (mDiscoveryListener != null) {
+            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+        }
+    }
+
+    public void stopAnnouncement() {
+        if (mRegistrationListener != null) {
+            mNsdManager.unregisterService(mRegistrationListener);
+        }
     }
 
     public void connect(InetAddress host, Integer port) {
