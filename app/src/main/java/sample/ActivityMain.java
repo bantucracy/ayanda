@@ -14,11 +14,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -147,12 +145,13 @@ public class ActivityMain extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Define the callback for what to do when data is received
-    private BroadcastReceiver testReceiver = new BroadcastReceiver() {
+    // Define the callback for what to do when number of devices is updated
+    private BroadcastReceiver lanDeviceNumReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             peers.clear();
             peerNames.clear();
+            peersAdapter.clear();
 
             peers.addAll(lan.getDeviceList());
             for (int i = 0; i < peers.size(); i++) {
@@ -163,23 +162,23 @@ public class ActivityMain extends AppCompatActivity {
 
     };
 
+
+
     private void registerReceivers() {
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(Lan.LAN_DEVICE_NUM_UPDATE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(testReceiver, filter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(lanDeviceNumReceiver, filter);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        lan.stopAnnouncement();
-        lan.stopDiscovery();
+        //lan.stopAnnouncement();
+        //lan.stopDiscovery();
     }
 
-    public void writeMessage(String msg) {
-        Message message = Message.obtain();
-        message.obj = msg;
-        peerHandler.sendMessage(message);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
-
 }

@@ -2,6 +2,8 @@ package sintulabs.p2p;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.support.v4.content.LocalBroadcastManager;
@@ -25,6 +27,7 @@ public class Lan extends P2P{
     public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
     public final static String LAN_DEVICE_NUM_UPDATE = "AYANDA_LAN_DEVICE_UPDATE";
+    public final static String LAN_SERVICE_LOST = "AYANDA_LAN_SERVICE_LOST";
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
     private NsdManager.ResolveListener mResolveListener;
@@ -107,6 +110,7 @@ public class Lan extends P2P{
             public void onServiceUnregistered(NsdServiceInfo arg0) {
                 // Service has been unregistered.  This only happens when you call
                 // NsdManager.unregisterService() and pass in this listener.
+                serviceAnnounced = false; // Allow service to be re-announced
             }
 
             @Override
@@ -153,6 +157,7 @@ public class Lan extends P2P{
                 String hash = service.getServiceName() + service.getServiceType();
 
                 if (servicesDiscovered.contains(hash)) {
+                    Log.d(TAG_DEBUG, "Service already discovered");
                     // Service already discovered -- ignore it!
                 }
                 // Make sure service is the expect type and name
@@ -170,32 +175,51 @@ public class Lan extends P2P{
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
-
-                            int port = serviceInfo.getPort();
-                            InetAddress host = serviceInfo.getHost();
-
-                            updateLanList(new Device(host, port));
+                            addDeviceToList(new Device(serviceInfo));
+                            updateDeviceList();
                             Toast.makeText(mContext, "Discovered Service: " + serviceInfo, Toast.LENGTH_LONG).show();
-                            /* FYI; ServiceType within listener doesn't have a period at the end.
-                             outside the listener it does */
-                             servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
+                        /* FYI; ServiceType within listener doesn't have a period at the end.
+                         outside the listener it does */
+                            servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
                         }
                     });
                 }
                 servicesDiscovered.add(hash);
             }
 
-
-            private void updateLanList(Device device) {
-                deviceList.add(device);
+            /*  Broadcast a notification that device list has been updated */
+            private void updateDeviceList() {
                 Intent in = new Intent(LAN_DEVICE_NUM_UPDATE);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(in);
+            }
+
+            private void addDeviceToList(Device device) {
+                deviceList.add(device);
+            }
+
+            private void removeDeviceFromList(Device device) {
+                int pos = -1; // pos of device to remove
+                String deviceName = device.getName();
+                String match;
+                for (int i = 0; i < deviceList.size(); i++) {
+                    match = deviceList.get(i).getName();
+                        if (deviceName.contains(match)) {
+                        pos = i;
+                        break;
+                    }
+                }
+                if (pos != -1) {
+                    deviceList.remove(pos);
+                }
+                updateDeviceList();
             }
             @Override
             public void onServiceLost(NsdServiceInfo service) {
                 // When the network service is no longer available.
-                // Internal bookkeeping code goes here.
+                // remove service from list
                 Log.e(TAG_DEBUG, "service lost" + service);
+                removeDeviceFromList(new Device(service));
+                updateDeviceList();
             }
 
             @Override
@@ -258,13 +282,16 @@ public class Lan extends P2P{
     public List<Device> getDeviceList() {
         return deviceList;
     }
+
     public static class Device {
         private InetAddress host;
         private Integer port;
+        NsdServiceInfo serviceInfo;
 
-        public Device(InetAddress host, Integer port) {
-            this.host = host;
-            this.port = port;
+        public Device(NsdServiceInfo serviceInfo) {
+            this.port = serviceInfo.getPort();
+            this.host = serviceInfo.getHost();
+            this.serviceInfo = serviceInfo;
         }
 
         public InetAddress getHost() {
@@ -274,7 +301,7 @@ public class Lan extends P2P{
             return port;
         }
         public String getName() {
-            return host.toString() + ":" + Integer.toString(port);
+            return serviceInfo.getServiceName();
         }
 
     }
