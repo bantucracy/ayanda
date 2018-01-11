@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by sabzo on 12/26/17.
@@ -37,11 +39,14 @@ public class Lan extends P2P{
 
     private List<Device> deviceList;
 
+    private Set<String> servicesDiscovered;
+
     public Lan(Context context) {
         mContext = context;
         mNsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         deviceList = new ArrayList<>();
         serviceAnnounced = false;
+        servicesDiscovered = new HashSet<>();
     }
 
     @Override
@@ -145,9 +150,13 @@ public class Lan extends P2P{
             public void onServiceFound(NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d(TAG_DEBUG, "Service discovery success" + service);
+                String hash = service.getServiceName() + service.getServiceType();
 
+                if (servicesDiscovered.contains(hash)) {
+                    // Service already discovered -- ignore it!
+                }
                 // Make sure service is the expect type and name
-                if ( service.getServiceType().equals(SERVICE_TYPE) &&
+                else if ( service.getServiceType().equals(SERVICE_TYPE) &&
                         service.getServiceName().contains(SERVICE_NAME_DEFAULT)) {
 
                     mNsdManager.resolveService(service, new NsdManager.ResolveListener() {
@@ -167,9 +176,13 @@ public class Lan extends P2P{
 
                             updateLanList(new Device(host, port));
                             Toast.makeText(mContext, "Discovered Service: " + serviceInfo, Toast.LENGTH_LONG).show();
+                            /* FYI; ServiceType within listener doesn't have a period at the end.
+                             outside the listener it does */
+                             servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
                         }
                     });
                 }
+                servicesDiscovered.add(hash);
             }
 
 
