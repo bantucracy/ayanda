@@ -14,10 +14,12 @@ public abstract class P2P {
     protected abstract void announce();
     // Discover nearby Peer
     protected abstract void discover();
+    
     // Disconnect from a peer
     protected abstract void disconnect();
     // Send file to peer
     protected abstract void send();
     // Cancel file transfer in progress
     protected abstract void cancel();
+
 }

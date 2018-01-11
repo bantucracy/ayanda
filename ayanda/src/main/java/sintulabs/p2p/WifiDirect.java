@@ -17,6 +17,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import java.util.Map;
 
 /**
@@ -25,6 +26,7 @@ import java.util.Map;
  */
 
 public class WifiDirect extends P2P {
+
     private static WifiP2pManager wifiP2pManager;
     private static WifiP2pManager.Channel wifiDirectChannel;
     private Context context;
@@ -41,6 +43,7 @@ public class WifiDirect extends P2P {
 
     ArrayList<WifiP2pDevice> devices = new ArrayList<>();
     private List peers = new ArrayList();
+
 
     private void createIntent() {
         intentFilter = new IntentFilter();
@@ -65,7 +68,6 @@ public class WifiDirect extends P2P {
     }
 
     // Announce Wifi Direct service
-
     @Override
     public void announce() {
 ;
@@ -77,6 +79,7 @@ public class WifiDirect extends P2P {
 
         // Create Service Info Object containing the service details
         serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("_test", "_presence._tcp", txtRecords);
+
         // Publish local service SERVICE_INSTANCE with Service Tye  _http._tcp
         wifiP2pManager.addLocalService(wifiDirectChannel, serviceInfo,
                 new WifiP2pManager.ActionListener() {
@@ -151,6 +154,7 @@ public class WifiDirect extends P2P {
     }
 
 
+
     // Create WifiP2pManager and Channel
     private void initializeWifiDirect() {
         wifiP2pManager = (WifiP2pManager) context.getSystemService(context.WIFI_P2P_SERVICE);
@@ -191,6 +195,7 @@ public class WifiDirect extends P2P {
         context.unregisterReceiver(receiver);
     }
 
+
     public void connect(WifiP2pDevice device) {
         // Picking the first device found on the network.
 
@@ -218,5 +223,4 @@ public class WifiDirect extends P2P {
         message.obj = msg;
         peerHandler.sendMessage(message);
     }
-
 }
