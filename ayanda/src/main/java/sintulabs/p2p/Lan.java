@@ -154,7 +154,7 @@ public class Lan extends P2P{
             public void onServiceFound(NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d(TAG_DEBUG, "Service discovery success" + service);
-                String hash = service.getServiceName() + service.getServiceType();
+                String hash = service.getServiceName();
 
                 if (servicesDiscovered.contains(hash)) {
                     Log.d(TAG_DEBUG, "Service already discovered");
@@ -219,6 +219,7 @@ public class Lan extends P2P{
                 // remove service from list
                 Log.e(TAG_DEBUG, "service lost" + service);
                 removeDeviceFromList(new Device(service));
+                servicesDiscovered.remove(service.getServiceName());
                 updateDeviceList();
             }
 
