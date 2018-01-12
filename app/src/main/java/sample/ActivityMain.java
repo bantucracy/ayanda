@@ -116,18 +116,7 @@ public class ActivityMain extends AppCompatActivity {
     }
 
     /* register the broadcast receiver with the intent values to be matched */
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //p2p.registerReceivers();
-    }
 
-    /* unregister the broadcast receiver */
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // p2p.unregisterReceiver();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -163,7 +152,6 @@ public class ActivityMain extends AppCompatActivity {
     };
 
 
-
     private void registerReceivers() {
         // Register for the particular broadcast based on ACTION string
         IntentFilter filter = new IntentFilter(Lan.LAN_DEVICE_NUM_UPDATE);
@@ -171,10 +159,23 @@ public class ActivityMain extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        //p2p.registerReceivers();
+    }
+
+    /* unregister the broadcast receiver */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // p2p.unregisterReceiver();
+
+    }
+    @Override
     protected void onStop() {
         super.onStop();
-        //lan.stopAnnouncement();
-        //lan.stopDiscovery();
+        lan.stopAnnouncement();
+        lan.stopDiscovery();
     }
 
     @Override

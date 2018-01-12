@@ -96,6 +96,7 @@ public class Lan extends P2P{
                 // with the name Android actually used.
                 mServiceName = NsdServiceInfo.getServiceName();
                 serviceAnnounced = true;
+                Log.d(TAG_DEBUG, "successfully registered service " + mServiceName);
             }
 
             @Override
@@ -253,12 +254,15 @@ public class Lan extends P2P{
     public void stopDiscovery() {
         if (mDiscoveryListener != null) {
             mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+            mDiscoveryListener = null;
+            servicesDiscovered.clear();
         }
     }
 
     public void stopAnnouncement() {
         if (mRegistrationListener != null) {
             mNsdManager.unregisterService(mRegistrationListener);
+            mRegistrationListener = null;
         }
     }
 
