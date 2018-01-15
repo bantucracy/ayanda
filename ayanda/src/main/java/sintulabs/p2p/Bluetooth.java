@@ -1,10 +1,12 @@
 package sintulabs.p2p;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.util.Log;
+import android.content.IntentFilter;
+
+import static android.bluetooth.BluetoothAdapter.ACTION_SCAN_MODE_CHANGED;
 
 
 /**
@@ -14,6 +16,8 @@ import android.util.Log;
 public class Bluetooth extends P2P {
     private Context context;
     BluetoothAdapter mBluetoothAdapter;
+    private BroadcastReceiver receiver;
+    private IntentFilter intentFilter;
 
 
     public Bluetooth(Context context) {
@@ -39,6 +43,27 @@ public class Bluetooth extends P2P {
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             context.startActivity(discoverableIntent);
         }
+
+        createIntentFilter();
+        createReceiver();
+        registerReceivers();
+    }
+
+    private void createIntentFilter() {
+        intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_SCAN_MODE_CHANGED);
+    }
+
+    private void createReceiver() {
+        receiver = new BluetoothBroadcastReceiver();
+    }
+
+    public void registerReceivers() {
+        context.registerReceiver(receiver, intentFilter);
+    }
+
+    public void unregisterReceiver() {
+        context.unregisterReceiver(receiver);
     }
 
     @Override
