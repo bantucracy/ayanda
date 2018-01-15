@@ -63,8 +63,16 @@ public class WifiDirect extends P2P {
 
         announce();
         discover();
+    }
 
+    @Override
+    protected Boolean isSupported() {
+        return null;
+    }
 
+    @Override
+    protected Boolean isEnabled() {
+        return null;
     }
 
     // Announce Wifi Direct service

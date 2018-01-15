@@ -10,9 +10,9 @@ public abstract class P2P {
     protected final short BLUETOOTH = 1;
     protected final  String TAG_DEBUG = "ayanda_bug";
 
-    // announce service
+    /* announce the p2p service */
     protected abstract void announce();
-    // Discover nearby Peer
+    /* Discover a nearby Peer*/
     protected abstract void discover();
     
     // Disconnect from a peer
@@ -21,5 +21,10 @@ public abstract class P2P {
     protected abstract void send();
     // Cancel file transfer in progress
     protected abstract void cancel();
+
+    /* If connection method is supported */
+    protected abstract Boolean isSupported();
+    /* If connection method is not only supported, but is available*/
+    protected abstract Boolean isEnabled();
 
 }

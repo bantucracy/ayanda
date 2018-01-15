@@ -53,6 +53,16 @@ public class Lan extends P2P{
     }
 
     @Override
+    protected Boolean isSupported() {
+        return null;
+    }
+
+    @Override
+    protected Boolean isEnabled() {
+        return null;
+    }
+
+    @Override
     public void announce() {
         // Create the NsdServiceInfo object, and populate it.
         NsdServiceInfo serviceInfo  = new NsdServiceInfo();
