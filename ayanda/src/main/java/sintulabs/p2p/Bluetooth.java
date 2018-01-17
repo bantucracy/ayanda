@@ -67,6 +67,8 @@ public class Bluetooth extends P2P {
 
     private void createIntentFilter() {
         intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_DISCOVERY_STARTED);
+        intentFilter.addAction(ACTION_DISCOVERY_FINISHED);
         intentFilter.addAction(ACTION_STATE_CHANGED);
         intentFilter.addAction(ACTION_SCAN_MODE_CHANGED);
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
@@ -113,9 +115,11 @@ public class Bluetooth extends P2P {
                 }
             }
 
+            // Discovery is quick and limited (about 12 seconds)
             private void actionDiscoveryStarted(Intent intent) {
                 Log.d(TAG_DEBUG, "Discovery started");
             }
+            // Calls after BT finishes scanning (12 seconds)
             private void actionDiscoveryFinished(Intent intent) {
                 Log.d(TAG_DEBUG, "Discovery finished");
             }
