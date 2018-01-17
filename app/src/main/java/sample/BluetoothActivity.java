@@ -1,7 +1,9 @@
 package sample;
 
+import android.Manifest;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -20,8 +22,10 @@ public class BluetoothActivity extends AppCompatActivity {
     private Bluetooth bt;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        bt = new Bluetooth(this);
         super.onCreate(savedInstanceState);
+        bt = new Bluetooth(this);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                Bluetooth.BT_PERMISSION_REQUEST_LOCATION);
         setContentView(R.layout.bluetooth_activity);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -60,5 +64,11 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        bt.unregisterReceiver();
     }
 }

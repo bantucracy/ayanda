@@ -1,5 +1,6 @@
 package sintulabs.p2p;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -7,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,7 +31,9 @@ public class Bluetooth extends P2P {
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
     public static Integer REQUEST_ENABLE_BT = 1;
+    public static Integer BT_PERMISSION_REQUEST_LOCATION = 4444;
     public static Integer BT_ENABLED = 3000;
+    private Boolean discoveryInitiated = false;
 
 
     public Bluetooth(Context context) {
@@ -58,7 +62,7 @@ public class Bluetooth extends P2P {
     /* Enable Bluetooth if it's supported but not yet enabled */
     @Override
     public void announce() {
-        if ( isSupported() && !isEnabled()) {
+        if ( isSupported()) {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             context.startActivity(discoverableIntent);
@@ -67,11 +71,11 @@ public class Bluetooth extends P2P {
 
     private void createIntentFilter() {
         intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
         intentFilter.addAction(ACTION_DISCOVERY_STARTED);
         intentFilter.addAction(ACTION_DISCOVERY_FINISHED);
         intentFilter.addAction(ACTION_STATE_CHANGED);
         intentFilter.addAction(ACTION_SCAN_MODE_CHANGED);
-        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
     }
 
     /* Bluetooth event handler */
@@ -88,14 +92,14 @@ public class Bluetooth extends P2P {
                     case ACTION_DISCOVERY_FINISHED:
                         actionDiscoveryFinished(intent);
                         break;
-                    case BluetoothDevice.ACTION_FOUND:
-                        deviceFound(intent);
-                        break;
                     case ACTION_SCAN_MODE_CHANGED:
                         scanModeChange(intent);
                         break;
                     case ACTION_STATE_CHANGED:
                         stateChanged(intent);
+                        break;
+                    case BluetoothDevice.ACTION_FOUND:
+                        deviceFound(intent);
                         break;
                 }
             }
@@ -121,6 +125,7 @@ public class Bluetooth extends P2P {
             }
             // Calls after BT finishes scanning (12 seconds)
             private void actionDiscoveryFinished(Intent intent) {
+                discoveryInitiated = false;
                 Log.d(TAG_DEBUG, "Discovery finished");
             }
 
@@ -131,7 +136,7 @@ public class Bluetooth extends P2P {
                    switch (state) {
                     // Bluetooth state changed: Is it On?
                     case STATE_ON:
-                        if (!mBluetoothAdapter.startDiscovery()) {
+                        if (discoveryInitiated && !mBluetoothAdapter.startDiscovery()) {
                             Log.d(TAG_DEBUG, "unable to start bluetooth discovery");
                         };
                         break;
@@ -140,7 +145,9 @@ public class Bluetooth extends P2P {
 
 
             private void deviceFound(Intent intent) {
-                String s = "test";
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                String deviceName = device.getName();
+                String deviceHardwareAddress = device.getAddress(); // MAC address
             }
 
         };
@@ -160,8 +167,13 @@ public class Bluetooth extends P2P {
     @Override
     public void discover() {
         if ( isSupported()) {
+            discoveryInitiated = true;
             if (!isEnabled()) {
                 enable();
+            } else {
+                if (!mBluetoothAdapter.startDiscovery()) {
+                    Log.d(TAG_DEBUG, "unable to start bluetooth discovery");
+                };
             }
         }
     }
