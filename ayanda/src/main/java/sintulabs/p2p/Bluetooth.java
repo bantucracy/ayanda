@@ -1,6 +1,5 @@
 package sintulabs.p2p;
 
-import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -11,6 +10,10 @@ import android.content.IntentFilter;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import static android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED;
 import static android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_STARTED;
@@ -34,11 +37,13 @@ public class Bluetooth extends P2P {
     public static Integer BT_PERMISSION_REQUEST_LOCATION = 4444;
     public static Integer BT_ENABLED = 3000;
     private Boolean discoveryInitiated = false;
+    private Set<String> devicesDiscovered;
 
 
     public Bluetooth(Context context) {
         this.context = context;
         mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
+        devicesDiscovered = new HashSet<>();
         createIntentFilter();
         createReceiver();
         registerReceivers();
@@ -143,13 +148,10 @@ public class Bluetooth extends P2P {
                 }
             }
 
-
             private void deviceFound(Intent intent) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
+                devicesDiscovered.add(new Device(device).getDeviceName());
             }
-
         };
     }
 
@@ -190,6 +192,27 @@ public class Bluetooth extends P2P {
 
     @Override
     protected void cancel() {
+
+    }
+
+    public static class Device {
+        private BluetoothDevice device;
+        private String deviceName;
+        private String deviceAddress; // MAC address
+
+        public Device(BluetoothDevice device) {
+            this.device = device;
+            deviceName = device.getName();
+            deviceAddress = device.getAddress(); // MAC address
+        }
+
+        public String getDeviceName() {
+            return deviceName;
+        }
+
+        public String getDeviceAddress() {
+            return deviceAddress;
+        }
 
     }
 }
