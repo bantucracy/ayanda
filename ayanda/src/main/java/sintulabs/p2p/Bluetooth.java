@@ -8,11 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED;
@@ -33,17 +35,20 @@ public class Bluetooth extends P2P {
     BluetoothAdapter mBluetoothAdapter;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
+    public static String BT_DEVICE_FOUND = "4000";
     public static Integer REQUEST_ENABLE_BT = 1;
     public static Integer BT_PERMISSION_REQUEST_LOCATION = 4444;
     public static Integer BT_ENABLED = 3000;
     private Boolean discoveryInitiated = false;
-    private Set<String> devicesDiscovered;
+    private Set<String> deviceNamesDiscovered;
+    private List<Device> deviceList;
 
 
     public Bluetooth(Context context) {
         this.context = context;
         mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
-        devicesDiscovered = new HashSet<>();
+        deviceNamesDiscovered = new HashSet<>();
+        deviceList = new ArrayList<>();
         createIntentFilter();
         createReceiver();
         registerReceivers();
@@ -150,7 +155,12 @@ public class Bluetooth extends P2P {
 
             private void deviceFound(Intent intent) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                devicesDiscovered.add(new Device(device).getDeviceName());
+                Device d = new Device(device);
+                deviceList.add(d);
+                String deviceName = d.getDeviceName() == null? d.getDeviceAddress(): d.getDeviceName();
+                deviceNamesDiscovered.add(deviceName);
+                Intent in = new Intent(BT_DEVICE_FOUND);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(in);
             }
         };
     }
@@ -180,6 +190,13 @@ public class Bluetooth extends P2P {
         }
     }
 
+    public List<Device> getDeviceList() {
+        return deviceList;
+    }
+
+    public Set<String> getDeviceNamesDiscovered() {
+       return deviceNamesDiscovered;
+    }
     @Override
     protected void disconnect() {
 

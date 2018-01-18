@@ -29,6 +29,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/btnBtDiscover"
-        android:id="@+id/lvDevices"/>
+        android:id="@+id/lvBtDeviceNames"/>
 
 </RelativeLayout>
