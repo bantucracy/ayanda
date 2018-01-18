@@ -8,4 +8,8 @@
     <string name="btn_wifi_direct_discover">Discover (WD) </string>
     <string name="btn_bluetooth_announce">Announce (BT)</string>
     <string name="btn_bluetooth_discover">Discover (BT)</string>
+    <!-- Menu -->
+    <string name="mi_lan">LAN</string>
+    <string name="mi_wd">WiFi Direct</string>
+    <string name="mi_bt">Bluetooth</string>
 </resources>
