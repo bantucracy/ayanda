@@ -42,9 +42,10 @@ public class WifiDirectActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createView();
-        setHandler();
         setListeners();
+        setHandler();
         p2p = new WifiDirect(this, peerHandler);
+        p2p.discover();
     }
 
     private void createView() {
@@ -77,20 +78,12 @@ public class WifiDirectActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        lvDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-                WifiP2pDevice device = (WifiP2pDevice) peers.get(pos);
-                p2p.connect(device);
-            }
-        });
-
         View.OnClickListener clickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
                     case R.id.btnWdAnnounce:
-                        p2p.announce();
+                        //p2p.announce();
                         break;
                     case R.id.btnWdDiscover:
                         p2p.discover();
