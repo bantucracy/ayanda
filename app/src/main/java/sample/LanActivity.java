@@ -4,10 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -29,7 +26,7 @@ import sintulabs.p2p.WifiDirect;
  * Created by sabzo on 1/10/18.
  */
 
-public class ActivityMain extends AppCompatActivity {
+public class LanActivity extends AppCompatActivity {
 
 
     private WifiDirect p2p;
@@ -37,7 +34,7 @@ public class ActivityMain extends AppCompatActivity {
     private List peers = new ArrayList();
     private ArrayAdapter<String> peersAdapter = null;
     private List peerNames = new ArrayList();
-    private Handler peerHandler;
+
     // Buttons
     private Button btnLanAnnounce;
     private Button btnLanDiscover;
@@ -47,7 +44,6 @@ public class ActivityMain extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createView();
-        setHandler();
         setListeners();
         registerReceivers();
         // p2p = new WifiDirect(null, null, this, peerHandler);
@@ -70,23 +66,6 @@ public class ActivityMain extends AppCompatActivity {
     }
 
 
-    private void setHandler() {
-        peerHandler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                peers.clear();
-                //
-                peers.addAll((List<WifiP2pDevice>) msg.obj);
-                peerNames.clear();
-                for (int i = 0; i < peers.size(); i++) {
-                    WifiP2pDevice device = (WifiP2pDevice) peers.get(i);
-                    peersAdapter.add(device.deviceName);
-                }
-
-                return true;
-            }
-        });
-    }
 
     private void setListeners() {
         View.OnClickListener btnClick = new View.OnClickListener() {
@@ -105,18 +84,7 @@ public class ActivityMain extends AppCompatActivity {
 
         btnLanAnnounce.setOnClickListener(btnClick);
         btnLanDiscover.setOnClickListener(btnClick);
-
-        /*lvDevices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-                WifiP2pDevice device = (WifiP2pDevice) peers.get(pos);
-                p2p.connect(device);
-            }
-        }); */
     }
-
-    /* register the broadcast receiver with the intent values to be matched */
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -128,10 +96,17 @@ public class ActivityMain extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.miBt:
+                startActivity(new Intent(this, BluetoothActivity.class ));
+                finish();
+                break;
+            case R.id.miWd:
+                startActivity(new Intent(this, WifiDirectActivity.class ));
+                finish();
+                break;
         }
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
     // Define the callback for what to do when number of devices is updated
@@ -150,7 +125,6 @@ public class ActivityMain extends AppCompatActivity {
         }
 
     };
-
 
     private void registerReceivers() {
         // Register for the particular broadcast based on ACTION string

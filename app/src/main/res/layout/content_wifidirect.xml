@@ -6,21 +6,21 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:showIn="@layout/activity_main" tools:context="sample.ActivityMain">
+    tools:showIn="@layout/activity_main" tools:context="sample.LanActivity">
 
     <Button
-        android:id="@+id/btnLanAnnounce"
+        android:id="@+id/btnWdAnnounce"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_lan_announce"
+        android:text="@string/btn_wifi_direct_announce"
         android:layout_alignParentLeft="true"
         />
 
     <Button
-        android:id="@+id/btnLanDiscover"
+        android:id="@+id/btnWdDiscover"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_lan_discover"
+        android:text="@string/btn_wifi_direct_discover"
 
         android:layout_alignParentRight="true"/>
 
@@ -28,7 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/btnLanAnnounce"
+        android:layout_below="@+id/btnWdDiscover"
         android:id="@+id/lvDevices"/>
 
 </RelativeLayout>

@@ -9,18 +9,18 @@
     tools:showIn="@layout/activity_main" tools:context="sample.LanActivity">
 
     <Button
-        android:id="@+id/btnBtAnnounce"
+        android:id="@+id/btnLanAnnounce"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_bluetooth_announce"
+        android:text="@string/btn_lan_announce"
         android:layout_alignParentLeft="true"
         />
 
     <Button
-        android:id="@+id/btnBtDiscover"
+        android:id="@+id/btnLanDiscover"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_bluetooth_discover"
+        android:text="@string/btn_lan_discover"
 
         android:layout_alignParentRight="true"/>
 
@@ -28,7 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/btnBtDiscover"
-        android:id="@+id/lvBtDeviceNames"/>
+        android:layout_below="@+id/btnLanAnnounce"
+        android:id="@+id/lvDevices"/>
 
 </RelativeLayout>
