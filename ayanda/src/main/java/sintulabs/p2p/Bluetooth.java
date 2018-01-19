@@ -55,12 +55,12 @@ public class Bluetooth extends P2P {
     }
 
     @Override
-    protected Boolean isSupported() {
+    public Boolean isSupported() {
        return  (mBluetoothAdapter == null)? false : true;
     }
 
     @Override
-    protected Boolean isEnabled() {
+    public Boolean isEnabled() {
         return mBluetoothAdapter.isEnabled();
     }
 
@@ -198,17 +198,17 @@ public class Bluetooth extends P2P {
        return deviceNamesDiscovered;
     }
     @Override
-    protected void disconnect() {
+    public void disconnect() {
 
     }
 
     @Override
-    protected void send() {
+    public void send() {
 
     }
 
     @Override
-    protected void cancel() {
+    public void cancel() {
 
     }
 

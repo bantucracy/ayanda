@@ -53,12 +53,12 @@ public class Lan extends P2P{
     }
 
     @Override
-    protected Boolean isSupported() {
+    public Boolean isSupported() {
         return null;
     }
 
     @Override
-    protected Boolean isEnabled() {
+    public Boolean isEnabled() {
         return null;
     }
 

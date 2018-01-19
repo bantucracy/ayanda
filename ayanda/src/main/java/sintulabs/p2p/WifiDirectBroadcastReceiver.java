@@ -16,6 +16,10 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.net.wifi.WifiManager.EXTRA_WIFI_STATE;
+import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
+import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED;
+
 /**
  * Created by sabzo on 12/20/17.
  */
@@ -29,6 +33,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     private List peers = new ArrayList();
     private WifiP2pDevice pi = new WifiP2pDevice();
     private WifiP2pManager.ConnectionInfoListener connectionInfoListener;
+    private Boolean wiFiP2pEnabled = false;
 
     public WifiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
                                        Handler peerHandler) {
@@ -62,10 +67,17 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         String action = intent.getAction();
 
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
-            // Check to see if Wi-Fi is enabled and notify appropriate activity
+            int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
+            switch (state) {
+                case WIFI_P2P_STATE_DISABLED:
+                    wiFiP2pEnabled = false;
+                    break;
+                case WIFI_P2P_STATE_ENABLED:
+                    wiFiP2pEnabled = true;
+                    break;
+            }
 
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-            // Call WifiP2pManager.requestPeers() to get a list of current peers
             if (mManager != null) {
                 mManager.requestPeers(mChannel, new WifiP2pManager.PeerListListener() {
                     @Override
@@ -74,12 +86,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                         peers.addAll(peerList.getDeviceList());
                         Message m = Message.obtain();
                         m.obj = peers;
-                        // TODO secondary Filter of devices with registered service
-                        //peerHandler.sendMessage(m);
-                        // find PiDroid SSID
-                        for (int i = 0; i < peers.size(); i++) {
-                            WifiP2pDevice dev = (WifiP2pDevice) peers.get(i);
-                        }
+                        // NICE TODO secondary Filter of devices with registered service
+                        peerHandler.sendMessage(m);
                     }
                 });
             }

@@ -11,20 +11,20 @@ public abstract class P2P {
     protected final  String TAG_DEBUG = "ayanda_bug";
 
     /* announce the p2p service */
-    protected abstract void announce();
+    public abstract void announce();
     /* Discover a nearby Peer*/
-    protected abstract void discover();
+    public abstract void discover();
     
     // Disconnect from a peer
-    protected abstract void disconnect();
+    public abstract void disconnect();
     // Send file to peer
-    protected abstract void send();
+    public abstract void send();
     // Cancel file transfer in progress
-    protected abstract void cancel();
+    public abstract void cancel();
 
     /* If connection method is supported */
-    protected abstract Boolean isSupported();
+    public abstract Boolean isSupported();
     /* If connection method is not only supported, but is available*/
-    protected abstract Boolean isEnabled();
+    public abstract Boolean isEnabled();
 
 }
