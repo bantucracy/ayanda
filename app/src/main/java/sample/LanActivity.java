@@ -4,10 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -105,6 +102,7 @@ public class LanActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.miWd:
+                startActivity(new Intent(this, WifiDirectActivity.class ));
                 finish();
                 break;
         }

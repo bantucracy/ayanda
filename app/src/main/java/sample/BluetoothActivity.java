@@ -24,6 +24,7 @@ import java.util.List;
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Bluetooth;
 import sintulabs.p2p.Lan;
+import sintulabs.p2p.WifiDirect;
 
 /**
  * Created by sabzo on 1/14/18.
@@ -109,6 +110,7 @@ public class BluetoothActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.miWd:
+                startActivity(new Intent(this, WifiDirectActivity.class ));
                 finish();
                 break;
         }

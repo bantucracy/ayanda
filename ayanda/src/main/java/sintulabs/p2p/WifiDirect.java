@@ -53,16 +53,13 @@ public class WifiDirect extends P2P {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
     }
 
-    public WifiDirect(String ssid, String password, Context context, Handler peerHandler) {
+    public WifiDirect(Context context, Handler peerHandler) {
         this.context = context;
         this.peerHandler = peerHandler;
         initializeWifiDirect();
         // IntentFilter for receiver
         createIntent();
         createReceiver();
-
-        announce();
-        discover();
     }
 
     @Override

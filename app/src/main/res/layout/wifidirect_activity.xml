@@ -15,6 +15,6 @@
     </android.support.v7.widget.Toolbar>
 
     <!-- Layout for content is here. This can be a RelativeLayout  -->
-    <include layout="@layout/content_lan" />
+    <include layout="@layout/content_wifidirect" />
 
 </LinearLayout>
