@@ -23,6 +23,7 @@ import java.util.List;
 
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Bluetooth;
+import sintulabs.p2p.IBluetooth;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.WifiDirect;
 
@@ -41,7 +42,33 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bt = new Bluetooth(this);
+        bt = new Bluetooth(this, new IBluetooth() {
+            @Override
+            public void actionDiscoveryStarted(Intent intent) {
+
+            }
+
+            @Override
+            public void actionDiscoveryFinished(Intent intent) {
+
+            }
+
+            @Override
+            public void stateChanged(Intent intent) {
+
+            }
+
+            @Override
+            public void scanModeChange(Intent intent) {
+
+            }
+
+            @Override
+            public void actionFound(Intent intent) {
+                peersAdapter.clear();
+                peersAdapter.addAll(bt.getDeviceNamesDiscovered());
+            }
+        });
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                 Bluetooth.BT_PERMISSION_REQUEST_LOCATION);
         setContentView(R.layout.bluetooth_activity);
@@ -49,7 +76,6 @@ public class BluetoothActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         createView();
         setListeners();
-        registerReceivers();
     }
 
     private void createView() {
@@ -78,22 +104,8 @@ public class BluetoothActivity extends AppCompatActivity {
         btnDiscover.setOnClickListener(btnClick);
     }
 
-    // Define the callback for what to do when number of devices is updated
-    private BroadcastReceiver btDeviceNamesFound = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            peersAdapter.clear();
-            peersAdapter.addAll(bt.getDeviceNamesDiscovered());
-        }
-
-    };
 
 
-    private void registerReceivers() {
-        // Register for the particular broadcast based on ACTION string
-        IntentFilter filter = new IntentFilter(bt.BT_DEVICE_FOUND);
-        LocalBroadcastManager.getInstance(this).registerReceiver(btDeviceNamesFound, filter);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -135,6 +147,5 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        bt.unregisterReceiver();
     }
 }

@@ -10,16 +10,14 @@ public class Ayanda {
     private Bluetooth bt;
     private Lan lan;
     private WifiDirect wd;
-    private WifiDirectBroadcastReceiver wdr;
 
     private Context context;
 
     public Ayanda(Context context, IWifiDirect iWifiDirect, ILan iLan, IBluetooth iBluetooth) {
         this.context = context;
-        bt = new Bluetooth(context);
+        bt = new Bluetooth(context, iBluetooth);
         lan = new Lan(context);
         wd = new WifiDirect(context, iWifiDirect);
-        //wdr = new WifiDirectBroadcastReceiver()
     }
 
     /*
