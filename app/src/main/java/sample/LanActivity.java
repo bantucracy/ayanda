@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.ILan;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.WifiDirect;
 
@@ -45,9 +46,21 @@ public class LanActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         createView();
         setListeners();
-        registerReceivers();
         // p2p = new WifiDirect(null, null, this, peerHandler);
-        lan = new Lan(this);
+        lan = new Lan(this, new ILan() {
+            @Override
+            public void deviceListChanged() {
+                peers.clear();
+                peerNames.clear();
+                peersAdapter.clear();
+
+                peers.addAll(lan.getDeviceList());
+                for (int i = 0; i < peers.size(); i++) {
+                    Lan.Device d = (Lan.Device) peers.get(i);
+                    peersAdapter.add(d.getName());
+                }
+            }
+        });
     }
 
 
@@ -109,40 +122,16 @@ public class LanActivity extends AppCompatActivity {
         return true;
     }
 
-    // Define the callback for what to do when number of devices is updated
-    private BroadcastReceiver lanDeviceNumReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            peers.clear();
-            peerNames.clear();
-            peersAdapter.clear();
-
-            peers.addAll(lan.getDeviceList());
-            for (int i = 0; i < peers.size(); i++) {
-                Lan.Device d = (Lan.Device) peers.get(i);
-                peersAdapter.add(d.getName());
-            }
-        }
-
-    };
-
-    private void registerReceivers() {
-        // Register for the particular broadcast based on ACTION string
-        IntentFilter filter = new IntentFilter(Lan.LAN_DEVICE_NUM_UPDATE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(lanDeviceNumReceiver, filter);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        //p2p.registerReceivers();
     }
 
     /* unregister the broadcast receiver */
     @Override
     protected void onPause() {
         super.onPause();
-        // p2p.unregisterReceiver();
 
     }
     @Override

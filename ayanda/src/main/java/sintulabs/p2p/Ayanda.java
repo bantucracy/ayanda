@@ -16,7 +16,7 @@ public class Ayanda {
     public Ayanda(Context context, IWifiDirect iWifiDirect, ILan iLan, IBluetooth iBluetooth) {
         this.context = context;
         bt = new Bluetooth(context, iBluetooth);
-        lan = new Lan(context);
+        lan = new Lan(context, iLan);
         wd = new WifiDirect(context, iWifiDirect);
     }
 

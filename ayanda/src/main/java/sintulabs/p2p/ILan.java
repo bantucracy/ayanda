@@ -5,5 +5,6 @@ package sintulabs.p2p;
  */
 
 public interface ILan {
-
+    // Runs on UI thread
+    public void deviceListChanged();
 }

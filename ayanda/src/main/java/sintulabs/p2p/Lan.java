@@ -1,12 +1,10 @@
 package sintulabs.p2p;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,8 +42,11 @@ public class Lan extends P2P{
 
     private Set<String> servicesDiscovered;
 
-    public Lan(Context context) {
+    private ILan iLan;
+
+    public Lan(Context context, ILan iLan) {
         mContext = context;
+        this.iLan = iLan;
         mNsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         deviceList = new ArrayList<>();
         serviceAnnounced = false;
@@ -198,10 +199,16 @@ public class Lan extends P2P{
                 servicesDiscovered.add(hash);
             }
 
-            /*  Broadcast a notification that device list has been updated */
+            /*  Update UI thread that device list has been changed */
             private void updateDeviceList() {
-                Intent in = new Intent(LAN_DEVICE_NUM_UPDATE);
-                LocalBroadcastManager.getInstance(mContext).sendBroadcast(in);
+                // Runnable for main thread
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        iLan.deviceListChanged();
+                    }
+                });
+
             }
 
             private void addDeviceToList(Device device) {
