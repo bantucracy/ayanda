@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.WifiDirect;
 
@@ -44,7 +45,27 @@ public class WifiDirectActivity extends AppCompatActivity {
         createView();
         setListeners();
         setHandler();
-        p2p = new WifiDirect(this, peerHandler);
+        p2p = new WifiDirect(this, new IWifiDirect() {
+            @Override
+            public void wifiP2pStateChangedAction(Intent intent) {
+
+            }
+
+            @Override
+            public void wifiP2pPeersChangedAction() {
+
+            }
+
+            @Override
+            public void wifiP2pConnectionChangedAction(Intent intent) {
+
+            }
+
+            @Override
+            public void wifiP2pThisDeviceChangedAction(Intent intent) {
+
+            }
+        });
         p2p.discover();
     }
 
@@ -129,7 +150,7 @@ public class WifiDirectActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.miLan:
-                startActivity(new Intent(this, Lan.class ));
+                startActivity(new Intent(this, LanActivity.class ));
                 finish();
                 break;
         }
