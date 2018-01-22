@@ -9,12 +9,9 @@ import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED;

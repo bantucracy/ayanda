@@ -34,7 +34,6 @@ public class WifiDirectActivity extends AppCompatActivity {
     private List peers = new ArrayList();
     private List peerNames = new ArrayList();
     private ArrayAdapter<String> peersAdapter = null;
-    private Handler peerHandler;
 
     private Button btnWdAnnounce;
     private Button btnWdDiscover;
@@ -44,7 +43,6 @@ public class WifiDirectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         createView();
         setListeners();
-        setHandler();
         p2p = new WifiDirect(this, new IWifiDirect() {
             @Override
             public void wifiP2pStateChangedAction(Intent intent) {
@@ -53,6 +51,14 @@ public class WifiDirectActivity extends AppCompatActivity {
 
             @Override
             public void wifiP2pPeersChangedAction() {
+                peers.clear();
+                // TODO fix error when WiFi off
+                peers.addAll(p2p.getDevicesDiscovered() );
+                peerNames.clear();
+                for (int i = 0; i < peers.size(); i++) {
+                    WifiP2pDevice device = (WifiP2pDevice) peers.get(i);
+                    peersAdapter.add(device.deviceName);
+                }
 
             }
 
@@ -80,23 +86,6 @@ public class WifiDirectActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
     }
 
-    private void setHandler() {
-        peerHandler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                peers.clear();
-                // TODO fix error when WiFi off
-                peers.addAll((List <WifiP2pDevice>) msg.obj );
-                peerNames.clear();
-                for (int i = 0; i < peers.size(); i++) {
-                    WifiP2pDevice device = (WifiP2pDevice) peers.get(i);
-                    peersAdapter.add(device.deviceName);
-                }
-
-                return true;
-            }
-        });
-    }
 
     private void setListeners() {
         View.OnClickListener clickListener = new View.OnClickListener() {
