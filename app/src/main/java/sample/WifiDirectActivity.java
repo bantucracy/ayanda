@@ -45,7 +45,7 @@ public class WifiDirectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         createView();
         setListeners();
-        a = new Ayanda(this, new IWifiDirect() {
+        a = new Ayanda(this, null, null, new IWifiDirect() {
             @Override
             public void wifiP2pStateChangedAction(Intent intent) {
 
@@ -72,7 +72,7 @@ public class WifiDirectActivity extends AppCompatActivity {
             public void wifiP2pThisDeviceChangedAction(Intent intent) {
 
             }
-        }, null, null);
+        });
         a.wdDiscover();
     }
 

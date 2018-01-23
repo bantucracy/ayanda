@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * Created by sabzo on 1/19/18.
@@ -16,7 +17,7 @@ public class Ayanda {
 
     private Context context;
 
-    public Ayanda(Context context, IWifiDirect iWifiDirect, ILan iLan, IBluetooth iBluetooth) {
+    public Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
         this.context = context;
         bt = new Bluetooth(context, iBluetooth);
         lan = new Lan(context, iLan);
@@ -27,9 +28,26 @@ public class Ayanda {
         Discover nearby devices that have made themselves detectable blue Bluetooth
         Discovers nearby devices and stores them in a collection of devices found.
      */
-    public void discover_by_bluetooth() {
-
+    public void btDiscover() {
+        bt.discover();
     }
+
+    public void btRegisterReceivers() {
+        bt.registerReceivers();
+    }
+
+    public void btUnregisterReceivers() {
+        bt.unregisterReceivers();
+    }
+
+    public void btAnnounce() {
+        bt.announce();
+    }
+
+    public Set<String> btGetDeviceNamesDiscovered() {
+        return bt.getDeviceNamesDiscovered();
+    }
+
     /*
         Discover nearby devices using LAN:
         A device can register a service on the network and other devices connected on the network

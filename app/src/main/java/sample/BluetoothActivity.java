@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.Bluetooth;
 import sintulabs.p2p.IBluetooth;
-import sintulabs.p2p.Lan;
-import sintulabs.p2p.WifiDirect;
 
 /**
  * Created by sabzo on 1/14/18.
@@ -38,11 +37,12 @@ public class BluetoothActivity extends AppCompatActivity {
     private ListView lvBtDeviceNames;
     private ArrayAdapter<String> peersAdapter = null;
     private List peerNames = new ArrayList();
-    private List peers = new ArrayList();
+
+    private Ayanda a;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bt = new Bluetooth(this, new IBluetooth() {
+        a = new Ayanda(this, new IBluetooth() {
             @Override
             public void actionDiscoveryStarted(Intent intent) {
 
@@ -66,9 +66,10 @@ public class BluetoothActivity extends AppCompatActivity {
             @Override
             public void actionFound(Intent intent) {
                 peersAdapter.clear();
-                peersAdapter.addAll(bt.getDeviceNamesDiscovered());
+                peersAdapter.addAll(a.btGetDeviceNamesDiscovered());
             }
-        });
+        }, null, null);
+
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                 Bluetooth.BT_PERMISSION_REQUEST_LOCATION);
         setContentView(R.layout.bluetooth_activity);
@@ -92,10 +93,10 @@ public class BluetoothActivity extends AppCompatActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.btnBtAnnounce:
-                        bt.announce();
+                        a.btAnnounce();
                         break;
                     case R.id.btnBtDiscover:
-                        bt.discover();
+                        a.btDiscover();
                         break;
                 }
             }
@@ -130,22 +131,17 @@ public class BluetoothActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
+        a.btRegisterReceivers();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
+
 
     @Override
     protected void onPause() {
         super.onPause();
+        a.btUnregisterReceivers();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
 }
