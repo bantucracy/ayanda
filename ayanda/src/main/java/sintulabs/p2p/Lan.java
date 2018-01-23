@@ -189,7 +189,7 @@ public class Lan extends P2P{
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
                             addDeviceToList(new Device(serviceInfo));
                             updateDeviceList();
-                            Toast.makeText(mContext, "Discovered Service: " + serviceInfo, Toast.LENGTH_LONG).show();
+                            Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
                         /* FYI; ServiceType within listener doesn't have a period at the end.
                          outside the listener it does */
                             servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());

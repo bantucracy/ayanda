@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,15 +49,28 @@ public class Ayanda {
         return bt.getDeviceNamesDiscovered();
     }
 
+    public void lanAnnounce() {
+        lan.announce();
+    }
     /*
         Discover nearby devices using LAN:
         A device can register a service on the network and other devices connected on the network
         will be able to detect it.
      */
-    public void discover_by_lan() {
-
+    public void lanDiscover() {
+        lan.discover();
     }
 
+    public void lanStopAnnouncement() {
+        lan.stopAnnouncement();
+    }
+
+    public void lanStopDiscovery() {
+        lan.stopDiscovery();
+    }
+    public List<Lan.Device> lanGetDeviceList() {
+      return lan.getDeviceList();
+    }
 
     /* Wifi Direct Methods */
     /*

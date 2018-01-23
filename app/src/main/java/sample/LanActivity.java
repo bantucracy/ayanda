@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.ILan;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.WifiDirect;
@@ -28,7 +29,6 @@ import sintulabs.p2p.WifiDirect;
  */
 
 public class LanActivity extends AppCompatActivity {
-
 
     private WifiDirect p2p;
     private ListView lvDevices;
@@ -40,27 +40,26 @@ public class LanActivity extends AppCompatActivity {
     private Button btnLanAnnounce;
     private Button btnLanDiscover;
     // LAN
-    Lan lan;
+    private Ayanda a;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createView();
         setListeners();
-        // p2p = new WifiDirect(null, null, this, peerHandler);
-        lan = new Lan(this, new ILan() {
+        a = new Ayanda(this, null, new ILan() {
             @Override
             public void deviceListChanged() {
                 peers.clear();
                 peerNames.clear();
                 peersAdapter.clear();
 
-                peers.addAll(lan.getDeviceList());
+                peers.addAll(a.lanGetDeviceList());
                 for (int i = 0; i < peers.size(); i++) {
                     Lan.Device d = (Lan.Device) peers.get(i);
                     peersAdapter.add(d.getName());
                 }
             }
-        });
+        }, null);
     }
 
 
@@ -86,10 +85,10 @@ public class LanActivity extends AppCompatActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.btnLanAnnounce:
-                        lan.announce();
+                        a.lanAnnounce();
                         break;
                     case R.id.btnLanDiscover:
-                        lan.discover();
+                        a.lanDiscover();
                         break;
                 }
             }
@@ -137,8 +136,8 @@ public class LanActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        lan.stopAnnouncement();
-        lan.stopDiscovery();
+        a.lanStopAnnouncement();
+        a.lanStopDiscovery();
     }
 
     @Override
