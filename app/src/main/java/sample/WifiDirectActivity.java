@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.WifiDirect;
@@ -29,7 +30,6 @@ import sintulabs.p2p.WifiDirect;
  */
 
 public class WifiDirectActivity extends AppCompatActivity {
-    private WifiDirect p2p;
     private ListView lvDevices;
     private List peers = new ArrayList();
     private List peerNames = new ArrayList();
@@ -38,12 +38,14 @@ public class WifiDirectActivity extends AppCompatActivity {
     private Button btnWdAnnounce;
     private Button btnWdDiscover;
 
+    private Ayanda a;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createView();
         setListeners();
-        p2p = new WifiDirect(this, new IWifiDirect() {
+        a = new Ayanda(this, new IWifiDirect() {
             @Override
             public void wifiP2pStateChangedAction(Intent intent) {
 
@@ -53,13 +55,12 @@ public class WifiDirectActivity extends AppCompatActivity {
             public void wifiP2pPeersChangedAction() {
                 peers.clear();
                 // TODO fix error when WiFi off
-                peers.addAll(p2p.getDevicesDiscovered() );
+                peers.addAll(a.wdGetDevicesDiscovered() );
                 peerNames.clear();
                 for (int i = 0; i < peers.size(); i++) {
                     WifiP2pDevice device = (WifiP2pDevice) peers.get(i);
                     peersAdapter.add(device.deviceName);
                 }
-
             }
 
             @Override
@@ -71,8 +72,8 @@ public class WifiDirectActivity extends AppCompatActivity {
             public void wifiP2pThisDeviceChangedAction(Intent intent) {
 
             }
-        });
-        p2p.discover();
+        }, null, null);
+        a.wdDiscover();
     }
 
     private void createView() {
@@ -96,7 +97,7 @@ public class WifiDirectActivity extends AppCompatActivity {
                         //p2p.announce();
                         break;
                     case R.id.btnWdDiscover:
-                        p2p.discover();
+                        a.wdDiscover();
                         break;
                 }
             }
@@ -110,7 +111,7 @@ public class WifiDirectActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        p2p.registerReceivers();
+        a.wdRegisterReceivers();
     }
 
     /* unregister the broadcast receiver */
@@ -119,7 +120,7 @@ public class WifiDirectActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         super.onPause();
-        p2p.unregisterReceiver();
+        a.wdUnregisterReceivers();
     }
 
 

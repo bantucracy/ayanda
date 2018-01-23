@@ -136,7 +136,7 @@ public class WifiDirect extends P2P {
         context.registerReceiver(receiver, intentFilter);
     }
 
-    public void unregisterReceiver() {
+    public void unregisterReceivers() {
         context.unregisterReceiver(receiver);
     }
 

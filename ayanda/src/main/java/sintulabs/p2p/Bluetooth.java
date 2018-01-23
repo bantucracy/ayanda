@@ -54,7 +54,7 @@ public class Bluetooth extends P2P {
         deviceList = new ArrayList<>();
         createIntentFilter();
         createReceiver();
-        registerReceivers();
+        // ensure to register and unregister receivers
     }
 
     @Override
@@ -176,7 +176,7 @@ public class Bluetooth extends P2P {
         context.registerReceiver(receiver, intentFilter);
     }
 
-    public void unregisterReceiver() {
+    public void unregisterReceivers() {
         context.unregisterReceiver(receiver);
     }
 

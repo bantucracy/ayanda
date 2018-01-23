@@ -1,6 +1,9 @@
 package sintulabs.p2p;
 
 import android.content.Context;
+import android.net.wifi.p2p.WifiP2pDevice;
+
+import java.util.ArrayList;
 
 /**
  * Created by sabzo on 1/19/18.
@@ -35,10 +38,25 @@ public class Ayanda {
     public void discover_by_lan() {
 
     }
+
+
+    /* Wifi Direct Methods */
     /*
         Discover nearby WiFi Direct enabled devices
      */
-    public void discover_by_wd() {
+    public void wdDiscover() {
+        wd.discover();
+    }
 
+    public void wdRegisterReceivers() {
+        wd.registerReceivers();
+    }
+
+    public void wdUnregisterReceivers() {
+        wd.unregisterReceivers();
+    }
+
+    public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
+        return wd.getDevicesDiscovered();
     }
 }
