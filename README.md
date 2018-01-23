@@ -29,6 +29,7 @@ ILan iLan = new ILan() {
 };
 
 a = new Ayanda(this, null, iLan, null);
+a.lanDiscover();
 
 
 
@@ -54,14 +55,13 @@ a = new Ayanda(this, null, null, new IWifiDirect() {
 
         @Override
         public void wifiP2pConnectionChangedAction(Intent intent) {
-
         }
 
         @Override
         public void wifiP2pThisDeviceChangedAction(Intent intent) {
-
         }
     });
+    
 a.wdDiscover();
 ```
 See Example App in the app folder for more implementation details.
