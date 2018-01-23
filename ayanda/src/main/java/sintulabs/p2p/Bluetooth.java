@@ -43,15 +43,18 @@ public class Bluetooth extends P2P {
     private Set<String> deviceNamesDiscovered;
     private List<Device> deviceList;
 
+    private IBluetooth iBluetooth;
 
-    public Bluetooth(Context context) {
+
+    public Bluetooth(Context context, IBluetooth iBluetooth) {
         this.context = context;
+        this.iBluetooth = iBluetooth;
         mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
         deviceNamesDiscovered = new HashSet<>();
         deviceList = new ArrayList<>();
         createIntentFilter();
         createReceiver();
-        registerReceivers();
+        // ensure to register and unregister receivers
     }
 
     @Override
@@ -132,11 +135,13 @@ public class Bluetooth extends P2P {
             // Discovery is quick and limited (about 12 seconds)
             private void actionDiscoveryStarted(Intent intent) {
                 Log.d(TAG_DEBUG, "Discovery started");
+                iBluetooth.actionDiscoveryStarted(intent);
             }
             // Calls after BT finishes scanning (12 seconds)
             private void actionDiscoveryFinished(Intent intent) {
                 discoveryInitiated = false;
                 Log.d(TAG_DEBUG, "Discovery finished");
+                iBluetooth.actionDiscoveryFinished(intent);
             }
 
             /* Bluetooth enabled/disabled */
@@ -151,6 +156,7 @@ public class Bluetooth extends P2P {
                         };
                         break;
                 }
+                iBluetooth.stateChanged(intent);
             }
 
             private void deviceFound(Intent intent) {
@@ -159,8 +165,7 @@ public class Bluetooth extends P2P {
                 deviceList.add(d);
                 String deviceName = d.getDeviceName() == null? d.getDeviceAddress(): d.getDeviceName();
                 deviceNamesDiscovered.add(deviceName);
-                Intent in = new Intent(BT_DEVICE_FOUND);
-                LocalBroadcastManager.getInstance(context).sendBroadcast(in);
+                iBluetooth.actionFound(intent);
             }
         };
     }
@@ -171,7 +176,7 @@ public class Bluetooth extends P2P {
         context.registerReceiver(receiver, intentFilter);
     }
 
-    public void unregisterReceiver() {
+    public void unregisterReceivers() {
         context.unregisterReceiver(receiver);
     }
 

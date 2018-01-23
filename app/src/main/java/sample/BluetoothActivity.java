@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.Bluetooth;
-import sintulabs.p2p.Lan;
-import sintulabs.p2p.WifiDirect;
+import sintulabs.p2p.IBluetooth;
 
 /**
  * Created by sabzo on 1/14/18.
@@ -37,11 +37,39 @@ public class BluetoothActivity extends AppCompatActivity {
     private ListView lvBtDeviceNames;
     private ArrayAdapter<String> peersAdapter = null;
     private List peerNames = new ArrayList();
-    private List peers = new ArrayList();
+
+    private Ayanda a;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bt = new Bluetooth(this);
+        a = new Ayanda(this, new IBluetooth() {
+            @Override
+            public void actionDiscoveryStarted(Intent intent) {
+
+            }
+
+            @Override
+            public void actionDiscoveryFinished(Intent intent) {
+
+            }
+
+            @Override
+            public void stateChanged(Intent intent) {
+
+            }
+
+            @Override
+            public void scanModeChange(Intent intent) {
+
+            }
+
+            @Override
+            public void actionFound(Intent intent) {
+                peersAdapter.clear();
+                peersAdapter.addAll(a.btGetDeviceNamesDiscovered());
+            }
+        }, null, null);
+
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                 Bluetooth.BT_PERMISSION_REQUEST_LOCATION);
         setContentView(R.layout.bluetooth_activity);
@@ -49,7 +77,6 @@ public class BluetoothActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         createView();
         setListeners();
-        registerReceivers();
     }
 
     private void createView() {
@@ -66,10 +93,10 @@ public class BluetoothActivity extends AppCompatActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.btnBtAnnounce:
-                        bt.announce();
+                        a.btAnnounce();
                         break;
                     case R.id.btnBtDiscover:
-                        bt.discover();
+                        a.btDiscover();
                         break;
                 }
             }
@@ -78,22 +105,8 @@ public class BluetoothActivity extends AppCompatActivity {
         btnDiscover.setOnClickListener(btnClick);
     }
 
-    // Define the callback for what to do when number of devices is updated
-    private BroadcastReceiver btDeviceNamesFound = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            peersAdapter.clear();
-            peersAdapter.addAll(bt.getDeviceNamesDiscovered());
-        }
-
-    };
 
 
-    private void registerReceivers() {
-        // Register for the particular broadcast based on ACTION string
-        IntentFilter filter = new IntentFilter(bt.BT_DEVICE_FOUND);
-        LocalBroadcastManager.getInstance(this).registerReceiver(btDeviceNamesFound, filter);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -118,23 +131,17 @@ public class BluetoothActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
+        a.btRegisterReceivers();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
+
 
     @Override
     protected void onPause() {
         super.onPause();
+        a.btUnregisterReceivers();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        bt.unregisterReceiver();
-    }
 }

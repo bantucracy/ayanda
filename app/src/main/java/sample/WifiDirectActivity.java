@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
+import sintulabs.p2p.Ayanda;
+import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.WifiDirect;
 
@@ -28,24 +30,50 @@ import sintulabs.p2p.WifiDirect;
  */
 
 public class WifiDirectActivity extends AppCompatActivity {
-    private WifiDirect p2p;
     private ListView lvDevices;
     private List peers = new ArrayList();
     private List peerNames = new ArrayList();
     private ArrayAdapter<String> peersAdapter = null;
-    private Handler peerHandler;
 
     private Button btnWdAnnounce;
     private Button btnWdDiscover;
+
+    private Ayanda a;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createView();
         setListeners();
-        setHandler();
-        p2p = new WifiDirect(this, peerHandler);
-        p2p.discover();
+        a = new Ayanda(this, null, null, new IWifiDirect() {
+            @Override
+            public void wifiP2pStateChangedAction(Intent intent) {
+
+            }
+
+            @Override
+            public void wifiP2pPeersChangedAction() {
+                peers.clear();
+                // TODO fix error when WiFi off
+                peers.addAll(a.wdGetDevicesDiscovered() );
+                peerNames.clear();
+                for (int i = 0; i < peers.size(); i++) {
+                    WifiP2pDevice device = (WifiP2pDevice) peers.get(i);
+                    peersAdapter.add(device.deviceName);
+                }
+            }
+
+            @Override
+            public void wifiP2pConnectionChangedAction(Intent intent) {
+
+            }
+
+            @Override
+            public void wifiP2pThisDeviceChangedAction(Intent intent) {
+
+            }
+        });
+        a.wdDiscover();
     }
 
     private void createView() {
@@ -59,23 +87,6 @@ public class WifiDirectActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
     }
 
-    private void setHandler() {
-        peerHandler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                peers.clear();
-                // TODO fix error when WiFi off
-                peers.addAll((List <WifiP2pDevice>) msg.obj );
-                peerNames.clear();
-                for (int i = 0; i < peers.size(); i++) {
-                    WifiP2pDevice device = (WifiP2pDevice) peers.get(i);
-                    peersAdapter.add(device.deviceName);
-                }
-
-                return true;
-            }
-        });
-    }
 
     private void setListeners() {
         View.OnClickListener clickListener = new View.OnClickListener() {
@@ -86,7 +97,7 @@ public class WifiDirectActivity extends AppCompatActivity {
                         //p2p.announce();
                         break;
                     case R.id.btnWdDiscover:
-                        p2p.discover();
+                        a.wdDiscover();
                         break;
                 }
             }
@@ -100,7 +111,7 @@ public class WifiDirectActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        p2p.registerReceivers();
+        a.wdRegisterReceivers();
     }
 
     /* unregister the broadcast receiver */
@@ -109,7 +120,7 @@ public class WifiDirectActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         super.onPause();
-        p2p.unregisterReceiver();
+        a.wdUnregisterReceivers();
     }
 
 
@@ -129,7 +140,7 @@ public class WifiDirectActivity extends AppCompatActivity {
                 finish();
                 break;
             case R.id.miLan:
-                startActivity(new Intent(this, Lan.class ));
+                startActivity(new Intent(this, LanActivity.class ));
                 finish();
                 break;
         }
