@@ -3,6 +3,7 @@ package sintulabs.p2p;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -16,6 +17,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 /**
  * Created by sabzo on 12/26/17.
  */
@@ -24,17 +29,20 @@ public class Lan extends P2P{
     // constants for identifying service and service type
     public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
-    public final static String LAN_DEVICE_NUM_UPDATE = "AYANDA_LAN_DEVICE_UPDATE";
-    public final static String LAN_SERVICE_LOST = "AYANDA_LAN_SERVICE_LOST";
+
+    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
+    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
+
+
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
-    private NsdManager.ResolveListener mResolveListener;
     // For announcing service
     private int mLocalPort;
     private Context mContext;
     private String mServiceName;
     private NsdManager.RegistrationListener mRegistrationListener;
-
+    // for connecting
+    private String clientID = ""; // This device's WiFi ID
     private NsdManager mNsdManager;
     private Boolean serviceAnnounced;
 
@@ -51,6 +59,7 @@ public class Lan extends P2P{
         deviceList = new ArrayList<>();
         serviceAnnounced = false;
         servicesDiscovered = new HashSet<>();
+        clientID = getWifiAddress(context);
     }
 
     @Override
@@ -283,7 +292,42 @@ public class Lan extends P2P{
         }
     }
 
-    public void connect(InetAddress host, Integer port) {
+    public void connect(Device device) {
+        // Build URL to connect to
+
+        OkHttpClient client = new OkHttpClient();
+        StringBuilder stringUrl = buildURLFromDevice(device);
+        Request request = buildRequest(stringUrl);
+        try {
+            Response response = client.newCall(request).execute();
+
+        } catch (IOException e) {
+            Log.e(TAG_DEBUG, "Unable to connect to url: " + stringUrl.toString() + " ", e);
+        }
+    }
+
+    /* Create a String representing the host and port of a device on LAN */
+    private StringBuilder buildURLFromDevice(Device device) {
+        StringBuilder sbUrl = new StringBuilder();
+        sbUrl.append("http://");
+        sbUrl.append(device.getHost().getHostName());
+        sbUrl.append(":").append(device.getPort());
+        sbUrl.append(SERVICE_DOWNLOAD_FILE_PATH);
+        return sbUrl;
+    }
+
+    /* Create a Request Object */
+    private Request buildRequest(StringBuilder url) {
+        return new Request.Builder().url(url.toString())
+                .addHeader("NearbyClientId", clientID) .build();
+    }
+
+    /* Use WiFi Address as a unique device id */
+    private String getWifiAddress (Context context) {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+        return String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
+                (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
 
     }
     @Override
