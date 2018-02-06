@@ -4,15 +4,20 @@ import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +25,8 @@ import java.util.Set;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okio.BufferedSink;
+import okio.Okio;
 
 /**
  * Created by sabzo on 12/26/17.
@@ -292,17 +299,50 @@ public class Lan extends P2P{
         }
     }
 
+    /* Connect via HTTP & Download the File */
     public void connect(Device device) {
         // Build URL to connect to
 
         OkHttpClient client = new OkHttpClient();
-        StringBuilder stringUrl = buildURLFromDevice(device);
-        Request request = buildRequest(stringUrl);
+        StringBuilder sbUrl = buildURLFromDevice(device).append(SERVICE_DOWNLOAD_FILE_PATH);
+        Request request = buildRequest(sbUrl);
         try {
             Response response = client.newCall(request).execute();
 
+            // Create Media Object
+            NearbyMedia media = new NearbyMedia();
+            media.mMimeType = response.header("Content-Type", "text/plain");
+            media.mTitle = new Date().getTime() + "";
+            setFileExtension(media);
+            // Create File to store Media in
+            File fileOut = createFile(media.mTitle);
+            media.mFileMedia = fileOut;
+
+            Neighbor neighbor = new Neighbor(device.getHost().getHostAddress(),
+                    device.getHost().getHostName(), Neighbor.TYPE_WIFI_NSD);
+
+            iLan.transferProgress(neighbor, fileOut, media.mTitle, media.mMimeType, 50,
+                    Long.parseLong(response.header("Content-Length","0")));
+
+
+            BufferedSink sink = Okio.buffer(Okio.sink(fileOut));
+            sink.writeAll(response.body().source());
+            sink.close();
+
+            //now get the metadata
+            sbUrl = buildURLFromDevice(device).append(SERVICE_DOWNLOAD_METADATA_PATH);
+            request = buildRequest(sbUrl);
+            response = client.newCall(request).execute();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            sink = Okio.buffer(Okio.sink(baos));
+            sink.writeAll(response.body().source());
+            sink.close();
+
+            media.mMetadataJson = new String(baos.toByteArray());
+
         } catch (IOException e) {
-            Log.e(TAG_DEBUG, "Unable to connect to url: " + stringUrl.toString() + " ", e);
+            Log.e(TAG_DEBUG, "Unable to connect to url: " + sbUrl.toString() + " ", e);
         }
     }
 
@@ -312,7 +352,6 @@ public class Lan extends P2P{
         sbUrl.append("http://");
         sbUrl.append(device.getHost().getHostName());
         sbUrl.append(":").append(device.getPort());
-        sbUrl.append(SERVICE_DOWNLOAD_FILE_PATH);
         return sbUrl;
     }
 
@@ -320,6 +359,26 @@ public class Lan extends P2P{
     private Request buildRequest(StringBuilder url) {
         return new Request.Builder().url(url.toString())
                 .addHeader("NearbyClientId", clientID) .build();
+    }
+
+    private File createFile(String mTitle) {
+        File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        return new File(dirDownloads, new Date().getTime() + "." + mTitle);
+    }
+
+    private void setFileExtension(NearbyMedia media) {
+        String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(media.mMimeType);
+
+        if (fileExt == null)
+        {
+            if (media.mMimeType.startsWith("image"))
+                fileExt = "jpg";
+            else if (media.mMimeType.startsWith("video"))
+                fileExt = "mp4";
+            else if (media.mMimeType.startsWith("audio"))
+                fileExt = "m4a";
+        }
+        media.mTitle += "." + fileExt;
     }
 
     /* Use WiFi Address as a unique device id */
