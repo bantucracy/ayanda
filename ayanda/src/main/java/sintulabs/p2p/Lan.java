@@ -3,18 +3,33 @@ package sintulabs.p2p;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import fi.iki.elonen.NanoHTTPD;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okio.BufferedSink;
+import okio.Okio;
 
 /**
  * Created by sabzo on 12/26/17.
@@ -24,23 +39,29 @@ public class Lan extends P2P{
     // constants for identifying service and service type
     public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
-    public final static String LAN_DEVICE_NUM_UPDATE = "AYANDA_LAN_DEVICE_UPDATE";
-    public final static String LAN_SERVICE_LOST = "AYANDA_LAN_SERVICE_LOST";
+
+    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
+    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
+
+
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
-    private NsdManager.ResolveListener mResolveListener;
     // For announcing service
-    private int mLocalPort;
+    private int localPort = 0;
     private Context mContext;
     private String mServiceName;
     private NsdManager.RegistrationListener mRegistrationListener;
-
+    // for connecting
+    private String clientID = ""; // This device's WiFi ID
     private NsdManager mNsdManager;
     private Boolean serviceAnnounced;
 
     private List<Device> deviceList;
 
     private Set<String> servicesDiscovered;
+
+    private NearbyMedia fileToShare;
+    private WebServer webServer;
 
     private ILan iLan;
 
@@ -51,6 +72,7 @@ public class Lan extends P2P{
         deviceList = new ArrayList<>();
         serviceAnnounced = false;
         servicesDiscovered = new HashSet<>();
+        clientID = getWifiAddress(context);
     }
 
     @Override
@@ -67,16 +89,16 @@ public class Lan extends P2P{
     public void announce() {
         // Create the NsdServiceInfo object, and populate it.
         NsdServiceInfo serviceInfo  = new NsdServiceInfo();
-        int port = 0;
         try {
-            port = findOpenSocket();
+            localPort = findOpenSocket();
         } catch (IOException e) {
-            e.printStackTrace();        }
+            e.printStackTrace();
+        }
         // The name is   subject to change based on conflicts
         // with other services advertised on the same network.
         serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
         serviceInfo.setServiceType(SERVICE_TYPE);
-        serviceInfo.setPort(port);
+        serviceInfo.setPort(localPort);
 
         mNsdManager = (NsdManager)mContext.getSystemService(Context.NSD_SERVICE);
 
@@ -87,7 +109,7 @@ public class Lan extends P2P{
         if (!serviceAnnounced) {
             mNsdManager.registerService(
                     serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-            msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(port);
+            msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
         } else {
             msg = "Service already announced";
         }
@@ -135,12 +157,10 @@ public class Lan extends P2P{
     private int findOpenSocket() throws java.io.IOException {
         // Initialize a server socket on the next available port.
         ServerSocket serverSocket = new ServerSocket(0);
-
         // Store the chosen port.
-        mLocalPort =  serverSocket.getLocalPort();
+        int port =  serverSocket.getLocalPort();
         serverSocket.close();
-
-        return mLocalPort;
+        return port;
     }
 
 
@@ -187,7 +207,9 @@ public class Lan extends P2P{
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
-                            addDeviceToList(new Device(serviceInfo));
+                            Device d = new Device(serviceInfo);
+                            addDeviceToList(d);
+                            connect(d);
                             updateDeviceList();
                             Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
                         /* FYI; ServiceType within listener doesn't have a period at the end.
@@ -283,23 +305,97 @@ public class Lan extends P2P{
         }
     }
 
-    public void connect(InetAddress host, Integer port) {
+    /* Connect via HTTP & Download the File */
+    public void connect(Device device) {
+        // Build URL to connect to
+
+        OkHttpClient client = new OkHttpClient();
+        StringBuilder sbUrl = buildURLFromDevice(device).append(SERVICE_DOWNLOAD_FILE_PATH);
+        Request request = buildRequest(sbUrl);
+        try {
+            Response response = client.newCall(request).execute();
+
+            // Create Media Object
+            NearbyMedia media = new NearbyMedia();
+            media.mMimeType = response.header("Content-Type", "text/plain");
+            media.mTitle = new Date().getTime() + "";
+            setFileExtension(media);
+            // Create File to store Media in
+            File fileOut = createFile(media.mTitle);
+            media.mFileMedia = fileOut;
+
+            Neighbor neighbor = new Neighbor(device.getHost().getHostAddress(),
+                    device.getHost().getHostName(), Neighbor.TYPE_WIFI_NSD);
+
+            iLan.transferProgress(neighbor, fileOut, media.mTitle, media.mMimeType, 50,
+                    Long.parseLong(response.header("Content-Length","0")));
+
+
+            BufferedSink sink = Okio.buffer(Okio.sink(fileOut));
+            sink.writeAll(response.body().source());
+            sink.close();
+
+            //now get the metadata
+            sbUrl = buildURLFromDevice(device).append(SERVICE_DOWNLOAD_METADATA_PATH);
+            request = buildRequest(sbUrl);
+            response = client.newCall(request).execute();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            sink = Okio.buffer(Okio.sink(baos));
+            sink.writeAll(response.body().source());
+            sink.close();
+
+            media.mMetadataJson = new String(baos.toByteArray());
+
+        } catch (IOException e) {
+            Log.e(TAG_DEBUG, "Unable to connect to url: " + sbUrl.toString() + " ", e);
+        }
+    }
+
+    /* Create a String representing the host and port of a device on LAN */
+    private StringBuilder buildURLFromDevice(Device device) {
+        StringBuilder sbUrl = new StringBuilder();
+        sbUrl.append("http://");
+        sbUrl.append(device.getHost().getHostName());
+        sbUrl.append(":").append(device.getPort());
+        return sbUrl;
+    }
+
+    /* Create a Request Object */
+    private Request buildRequest(StringBuilder url) {
+        return new Request.Builder().url(url.toString())
+                .addHeader("NearbyClientId", clientID) .build();
+    }
+
+    private File createFile(String mTitle) {
+        File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        return new File(dirDownloads, new Date().getTime() + "." + mTitle);
+    }
+
+    private void setFileExtension(NearbyMedia media) {
+        String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(media.mMimeType);
+
+        if (fileExt == null)
+        {
+            if (media.mMimeType.startsWith("image"))
+                fileExt = "jpg";
+            else if (media.mMimeType.startsWith("video"))
+                fileExt = "mp4";
+            else if (media.mMimeType.startsWith("audio"))
+                fileExt = "m4a";
+        }
+        media.mTitle += "." + fileExt;
+    }
+
+    /* Use WiFi Address as a unique device id */
+    private String getWifiAddress (Context context) {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+        return String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
+                (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
 
     }
-    @Override
-    public void disconnect() {
 
-    }
-
-    @Override
-    public void send() {
-
-    }
-
-    @Override
-    public void cancel() {
-
-    }
 
     public List<Device> getDeviceList() {
         return deviceList;
@@ -325,6 +421,69 @@ public class Lan extends P2P{
         public String getName() {
             return serviceInfo.getServiceName();
         }
+
+    }
+
+    /* Share file with nearby devices */
+    public void shareFile(NearbyMedia media) throws IOException {
+        this.fileToShare = media;
+        if (webServer == null) {
+            announce();
+            webServer = new WebServer(localPort);
+        }
+    }
+
+    private class WebServer extends NanoHTTPD {
+
+        public WebServer(int port) throws java.io.IOException {
+            super(port);
+            start();
+        }
+
+        @Override
+        public Response serve(IHTTPSession session) {
+
+            if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH))
+            {
+                try {
+                    return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.mFileMedia));
+                }
+                catch (IOException ioe)
+                {
+                    return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR,"text/plain",ioe.getLocalizedMessage());
+                }
+            }
+            else if (session.getUri().endsWith(SERVICE_DOWNLOAD_METADATA_PATH))
+            {
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK,"text/plain", fileToShare.mMetadataJson);
+
+            }
+            else {
+                String msg = "<html><body><h1>Hello server</h1>\n";
+                Map<String, String> parms = session.getParms();
+                if (parms.get("username") == null) {
+                    msg += "<form action='?' method='get'>\n  <p>Your name: <input type='text' name='username'></p>\n" + "</form>\n";
+                } else {
+                    msg += "<p>Hello, " + parms.get("username") + "!</p>";
+                }
+                return NanoHTTPD.newFixedLengthResponse(msg + "</body></html>\n");
+            }
+        }
+
+    }
+
+    @Override
+    public void disconnect() {
+
+    }
+
+    @Override
+    public void send() {
+
+    }
+
+    @Override
+    public void cancel() {
 
     }
 }
