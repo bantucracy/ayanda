@@ -31,6 +31,26 @@ ILan iLan = new ILan() {
 a = new Ayanda(this, null, iLan, null);
 a.lanDiscover();
 
+// Share a file to nearby devices through LAN
+String filePath = "sdcard/somepic.jpg";
+NearbyMedia nearbyMedia = new NearbyMedia();
+nearbyMedia.setMimeType("image/jpeg");
+nearbyMedia.setTitle("pic");
+
+nearbyMedia.setFileMedia(new File(filePath));
+
+//get a JSON representation of the metadata we want to share
+Gson gson = new GsonBuilder()
+        .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
+nearbyMedia.mMetadataJson = gson.toJson("key:value");
+try {
+    // Will store on nearby device's "Download" folder.
+    a.lanShare(nearbyMedia);
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+
 
 
 /* Discovering nearby devices by WifiDirect */

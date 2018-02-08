@@ -207,7 +207,9 @@ public class Lan extends P2P{
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
-                            addDeviceToList(new Device(serviceInfo));
+                            Device d = new Device(serviceInfo);
+                            addDeviceToList(d);
+                            connect(d);
                             updateDeviceList();
                             Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
                         /* FYI; ServiceType within listener doesn't have a period at the end.
@@ -424,7 +426,7 @@ public class Lan extends P2P{
 
     /* Share file with nearby devices */
     public void shareFile(NearbyMedia media) throws IOException {
-        this.fileToShare = fileToShare;
+        this.fileToShare = media;
         if (webServer == null) {
             announce();
             webServer = new WebServer(localPort);

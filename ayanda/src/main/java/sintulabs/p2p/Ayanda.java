@@ -3,6 +3,7 @@ package sintulabs.p2p;
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +48,10 @@ public class Ayanda {
 
     public Set<String> btGetDeviceNamesDiscovered() {
         return bt.getDeviceNamesDiscovered();
+    }
+
+    public void lanShare (NearbyMedia media) throws IOException {
+        lan.shareFile(media);
     }
 
     public void lanAnnounce() {

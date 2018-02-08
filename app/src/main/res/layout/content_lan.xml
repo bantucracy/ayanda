@@ -12,7 +12,7 @@
         android:id="@+id/btnLanAnnounce"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_lan_announce"
+        android:text="@string/btn_lan_share_file"
         android:layout_alignParentLeft="true"
         />
 
@@ -23,6 +23,12 @@
         android:text="@string/btn_lan_discover"
 
         android:layout_alignParentRight="true"/>
+
+    <ImageView
+        android:id="@+id/ivPreview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
 
     <ListView
         android:layout_width="match_parent"

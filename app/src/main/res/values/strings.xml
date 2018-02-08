@@ -2,6 +2,7 @@
     <string name="app_name">Ayanda</string>
     <string name="action_settings">Settings</string>
     <!-- Buttons -->
+    <string name="btn_lan_share_file">Share file</string>
     <string name="btn_lan_announce">Announce (LAN)</string>
     <string name="btn_lan_discover">Discover (LAN) </string>
     <string name="btn_wifi_direct_announce">Announce (WD)</string>
