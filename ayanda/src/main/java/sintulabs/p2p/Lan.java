@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -20,8 +21,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import fi.iki.elonen.NanoHTTPD;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -44,7 +47,7 @@ public class Lan extends P2P{
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
     // For announcing service
-    private int mLocalPort;
+    private int localPort = 0;
     private Context mContext;
     private String mServiceName;
     private NsdManager.RegistrationListener mRegistrationListener;
@@ -56,6 +59,9 @@ public class Lan extends P2P{
     private List<Device> deviceList;
 
     private Set<String> servicesDiscovered;
+
+    private NearbyMedia fileToShare;
+    private WebServer webServer;
 
     private ILan iLan;
 
@@ -83,16 +89,16 @@ public class Lan extends P2P{
     public void announce() {
         // Create the NsdServiceInfo object, and populate it.
         NsdServiceInfo serviceInfo  = new NsdServiceInfo();
-        int port = 0;
         try {
-            port = findOpenSocket();
+            localPort = findOpenSocket();
         } catch (IOException e) {
-            e.printStackTrace();        }
+            e.printStackTrace();
+        }
         // The name is   subject to change based on conflicts
         // with other services advertised on the same network.
         serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
         serviceInfo.setServiceType(SERVICE_TYPE);
-        serviceInfo.setPort(port);
+        serviceInfo.setPort(localPort);
 
         mNsdManager = (NsdManager)mContext.getSystemService(Context.NSD_SERVICE);
 
@@ -103,7 +109,7 @@ public class Lan extends P2P{
         if (!serviceAnnounced) {
             mNsdManager.registerService(
                     serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-            msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(port);
+            msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
         } else {
             msg = "Service already announced";
         }
@@ -151,12 +157,10 @@ public class Lan extends P2P{
     private int findOpenSocket() throws java.io.IOException {
         // Initialize a server socket on the next available port.
         ServerSocket serverSocket = new ServerSocket(0);
-
         // Store the chosen port.
-        mLocalPort =  serverSocket.getLocalPort();
+        int port =  serverSocket.getLocalPort();
         serverSocket.close();
-
-        return mLocalPort;
+        return port;
     }
 
 
@@ -389,20 +393,7 @@ public class Lan extends P2P{
                 (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
 
     }
-    @Override
-    public void disconnect() {
 
-    }
-
-    @Override
-    public void send() {
-
-    }
-
-    @Override
-    public void cancel() {
-
-    }
 
     public List<Device> getDeviceList() {
         return deviceList;
@@ -428,6 +419,69 @@ public class Lan extends P2P{
         public String getName() {
             return serviceInfo.getServiceName();
         }
+
+    }
+
+    /* Share file with nearby devices */
+    public void shareFile(NearbyMedia media) throws IOException {
+        this.fileToShare = fileToShare;
+        if (webServer == null) {
+            announce();
+            webServer = new WebServer(localPort);
+        }
+    }
+
+    private class WebServer extends NanoHTTPD {
+
+        public WebServer(int port) throws java.io.IOException {
+            super(port);
+            start();
+        }
+
+        @Override
+        public Response serve(IHTTPSession session) {
+
+            if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH))
+            {
+                try {
+                    return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.mFileMedia));
+                }
+                catch (IOException ioe)
+                {
+                    return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR,"text/plain",ioe.getLocalizedMessage());
+                }
+            }
+            else if (session.getUri().endsWith(SERVICE_DOWNLOAD_METADATA_PATH))
+            {
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK,"text/plain", fileToShare.mMetadataJson);
+
+            }
+            else {
+                String msg = "<html><body><h1>Hello server</h1>\n";
+                Map<String, String> parms = session.getParms();
+                if (parms.get("username") == null) {
+                    msg += "<form action='?' method='get'>\n  <p>Your name: <input type='text' name='username'></p>\n" + "</form>\n";
+                } else {
+                    msg += "<p>Hello, " + parms.get("username") + "!</p>";
+                }
+                return NanoHTTPD.newFixedLengthResponse(msg + "</body></html>\n");
+            }
+        }
+
+    }
+
+    @Override
+    public void disconnect() {
+
+    }
+
+    @Override
+    public void send() {
+
+    }
+
+    @Override
+    public void cancel() {
 
     }
 }
