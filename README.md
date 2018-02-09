@@ -30,29 +30,37 @@ ILan iLan = new ILan() {
 
 a = new Ayanda(this, null, iLan, null);
 a.lanDiscover();
+// INFO: lanDiscover() automatically makes an HTTP connection to services discovered
+```
 
-// Share a file to nearby devices through LAN
+To share a file using NSD (LAN)
+```java
+/* Share a file to nearby devices through LAN */
+
 String filePath = "sdcard/somepic.jpg";
+// NearbyMedia is a helper class to describe a file
 NearbyMedia nearbyMedia = new NearbyMedia();
 nearbyMedia.setMimeType("image/jpeg");
 nearbyMedia.setTitle("pic");
-
 nearbyMedia.setFileMedia(new File(filePath));
 
-//get a JSON representation of the metadata we want to share
+//get a JSON representation of any metadata we want to share
 Gson gson = new GsonBuilder()
         .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
 nearbyMedia.mMetadataJson = gson.toJson("key:value");
+
+// Share the file to devices on LAN registered for current service
 try {
     // Will store on nearby device's "Download" folder.
     a.lanShare(nearbyMedia);
 } catch (IOException e) {
     e.printStackTrace();
 }
+```
 
 
-
-
+Discovering nearby devices by WifiDirect
+```java
 /* Discovering nearby devices by WifiDirect */
 
 a = new Ayanda(this, null, null, new IWifiDirect() {

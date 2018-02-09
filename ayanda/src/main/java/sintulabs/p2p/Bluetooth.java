@@ -3,19 +3,21 @@ package sintulabs.p2p;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED;
 import static android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_STARTED;
@@ -35,13 +37,19 @@ public class Bluetooth extends P2P {
     BluetoothAdapter mBluetoothAdapter;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
-    public static String BT_DEVICE_FOUND = "4000";
     public static Integer REQUEST_ENABLE_BT = 1;
     public static Integer BT_PERMISSION_REQUEST_LOCATION = 4444;
-    public static Integer BT_ENABLED = 3000;
     private Boolean discoveryInitiated = false;
     private Set<String> deviceNamesDiscovered;
     private List<Device> deviceList;
+    Set<BluetoothDevice> pairedDevices;
+
+    public static String UUID = "00001101-0000-1000-8000-00805F9B34AC"; // arbitrary
+    public static String NAME = "Ayanda";
+
+    // Server
+    BluetoothServerSocket btServerSocket;
+    BluetoothSocket btSocket;
 
     private IBluetooth iBluetooth;
 
@@ -159,15 +167,44 @@ public class Bluetooth extends P2P {
                 iBluetooth.stateChanged(intent);
             }
 
-            private void deviceFound(Intent intent) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Device d = new Device(device);
-                deviceList.add(d);
-                String deviceName = d.getDeviceName() == null? d.getDeviceAddress(): d.getDeviceName();
-                deviceNamesDiscovered.add(deviceName);
-                iBluetooth.actionFound(intent);
-            }
         };
+    }
+
+    private void getPairedDevices() {
+        pairedDevices = mBluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            // There are paired devices. Get the name and address of each paired device.
+            for (BluetoothDevice device : pairedDevices) {
+                deviceFound(null);
+            }
+        }
+    }
+
+    private void deviceFound(Intent intent) {
+        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        Device d = new Device(device);
+        deviceList.add(d);
+        String deviceName = d.getDeviceName() == null ? d.getDeviceAddress() : d.getDeviceName();
+        deviceNamesDiscovered.add(deviceName);
+        iBluetooth.actionFound(intent);
+    }
+
+    /* Create Bluetooth Server Socket */
+    private void createServer() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    btServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME,
+                            java.util.UUID.fromString(UUID));
+                    btSocket = btServerSocket.accept();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+
     }
 
     /* Register/unregister Receiver */
@@ -188,9 +225,10 @@ public class Bluetooth extends P2P {
             if (!isEnabled()) {
                 enable();
             } else {
+                getPairedDevices();
                 if (!mBluetoothAdapter.startDiscovery()) {
                     Log.d(TAG_DEBUG, "unable to start bluetooth discovery");
-                };
+                }
             }
         }
     }
@@ -215,6 +253,10 @@ public class Bluetooth extends P2P {
     @Override
     public void cancel() {
 
+    }
+
+    public void shareFile(NearbyMedia media) throws IOException {
+        createServer();
     }
 
     public static class Device {

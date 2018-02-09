@@ -34,6 +34,10 @@ public class Ayanda {
         bt.discover();
     }
 
+    public void btShareFile(NearbyMedia media) {
+
+    }
+
     public void btRegisterReceivers() {
         bt.registerReceivers();
     }
