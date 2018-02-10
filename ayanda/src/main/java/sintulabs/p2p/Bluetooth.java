@@ -48,7 +48,6 @@ public class Bluetooth extends P2P {
     public static String NAME = "Ayanda";
 
 
-
     private IBluetooth iBluetooth;
 
 
@@ -187,15 +186,15 @@ public class Bluetooth extends P2P {
         iBluetooth.actionFound(intent);
     }
 
+    /* Connect to a discovered device */
+    private void connect(BluetoothDevice device) {
+        new ConnectThread(device).start();
+    }
+
     /* Create Bluetooth Server Socket */
     private void createServer() {
         new ServerThread().start();
     }
-
-    private void handleConnection() {
-
-    }
-
 
     /* Register/unregister Receiver */
 
@@ -206,7 +205,6 @@ public class Bluetooth extends P2P {
     public void unregisterReceivers() {
         context.unregisterReceiver(receiver);
     }
-
 
     @Override
     public void discover() {
@@ -232,7 +230,6 @@ public class Bluetooth extends P2P {
     }
     @Override
     public void disconnect() {
-
     }
 
     @Override
@@ -246,6 +243,7 @@ public class Bluetooth extends P2P {
     }
 
     public void shareFile(NearbyMedia media) throws IOException {
+        announce();
         createServer();
     }
 
@@ -311,6 +309,45 @@ public class Bluetooth extends P2P {
             } catch (IOException e) {
                 e.printStackTrace();
 
+            }
+        }
+    }
+
+    /* Connect to a Discovered Bluetooth Device */
+    private class ConnectThread extends Thread {
+
+        BluetoothSocket socket = null;
+
+        public ConnectThread(BluetoothDevice device) {
+            try {
+                socket = device.createRfcommSocketToServiceRecord(
+                        java.util.UUID.fromString(UUID));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            if (socket != null) {
+                try {
+                    socket.connect();
+                    handleConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void handleConnection() {
+
+        }
+
+        public void cancel() {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
