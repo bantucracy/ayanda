@@ -47,9 +47,7 @@ public class Bluetooth extends P2P {
     public static String UUID = "00001101-0000-1000-8000-00805F9B34AC"; // arbitrary
     public static String NAME = "Ayanda";
 
-    // Server
-    BluetoothServerSocket btServerSocket;
-    BluetoothSocket btSocket;
+
 
     private IBluetooth iBluetooth;
 
@@ -191,21 +189,13 @@ public class Bluetooth extends P2P {
 
     /* Create Bluetooth Server Socket */
     private void createServer() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    btServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME,
-                            java.util.UUID.fromString(UUID));
-                    btSocket = btServerSocket.accept();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        new ServerThread().start();
+    }
 
+    private void handleConnection() {
 
     }
+
 
     /* Register/unregister Receiver */
 
@@ -278,5 +268,50 @@ public class Bluetooth extends P2P {
             return deviceAddress;
         }
 
+    }
+
+    private class ServerThread extends Thread {
+        // Server
+        private BluetoothServerSocket btServerSocket;
+        private BluetoothSocket btSocket;
+
+        public ServerThread() {
+            try {
+                btServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME,
+                        java.util.UUID.fromString(UUID));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                btSocket = btServerSocket.accept();
+                // client has connected
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (btSocket != null) {
+                handleConnection();
+            }
+        }
+
+        public void handleConnection() {
+
+        }
+
+        // close open thread
+        public void close() {
+            try {
+                btServerSocket.close();
+                btSocket.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+        }
     }
 }
