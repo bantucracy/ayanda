@@ -19,6 +19,14 @@ public class Ayanda {
 
     private Context context;
 
+    /**
+     * Ayanda is a class that discovers and interacts with nearby devices that support
+     * Network Service Discovery (NSD), WiFi Direct, and  Bluetooth
+     * @param context The Activity/Application Context
+     * @param iBluetooth An interface to handle Bluetooth events
+     * @param iLan An interface to handle LAN (NSD/Bonjour/ZeroConfig/etc.,) events
+     * @param iWifiDirect An interface to handle Wifi Direct events
+     */
     public Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
         this.context = context;
         bt = new Bluetooth(context, iBluetooth);
@@ -26,26 +34,43 @@ public class Ayanda {
         wd = new WifiDirect(context, iWifiDirect);
     }
 
-    /*
-        Discover nearby devices that have made themselves detectable blue Bluetooth
-        Discovers nearby devices and stores them in a collection of devices found.
+    /**
+     * Discover nearby devices that have made themselves detectable via blue Bluetooth.
+     * Discovered devices are stored in a collection of devices found.
      */
     public void btDiscover() {
         bt.discover();
     }
 
-    public void btShareFile(NearbyMedia media) {
-
+    /**
+     * Current device acts as a server and writes bytes to a connected bluetooth device.
+     * Throws IO exception on an error
+     * @param bytes An array of bytes (file, string etc.,)
+     */
+    public void btWrite(byte[] bytes) throws IOException{
+        bt.write(bytes);
     }
 
+    /**
+     * Register a Bluetooth Broadcast Receiver.
+     * This method must be called to detect Bluetooth events. The iBluetooth interface
+     * exposes Bluetooth events.
+     */
     public void btRegisterReceivers() {
         bt.registerReceivers();
     }
 
+    /**
+     * Unregisters Bluetooth Broadcast Receiver.
+     * Must be called when Activity/App stops/closes
+     */
     public void btUnregisterReceivers() {
         bt.unregisterReceivers();
     }
 
+    /**
+     * Announce device's presence via Bluetooth
+     */
     public void btAnnounce() {
         bt.announce();
     }
