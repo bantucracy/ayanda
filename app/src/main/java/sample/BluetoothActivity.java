@@ -1,6 +1,7 @@
 package sample;
 
 import android.Manifest;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,11 +15,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import sintulabs.ayanda.R;
@@ -37,6 +41,7 @@ public class BluetoothActivity extends AppCompatActivity {
     private ListView lvBtDeviceNames;
     private ArrayAdapter<String> peersAdapter = null;
     private List peerNames = new ArrayList();
+    private HashMap<String, BluetoothDevice> devices = new HashMap<>();
 
     private Ayanda a;
     @Override
@@ -67,6 +72,12 @@ public class BluetoothActivity extends AppCompatActivity {
             public void actionFound(Intent intent) {
                 peersAdapter.clear();
                 peersAdapter.addAll(a.btGetDeviceNamesDiscovered());
+                devices = a.btGetDevices();
+            }
+
+            @Override
+            public void dataRead(byte[] bytes, int numRead) {
+
             }
         }, null, null);
 
@@ -101,11 +112,24 @@ public class BluetoothActivity extends AppCompatActivity {
                 }
             }
         };
+        AdapterView.OnItemClickListener clickPhone = new AdapterView.OnItemClickListener(){
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+                BluetoothDevice device = devices.get(peerNames.get(pos));
+                String message = "Hello World";
+                try {
+                    a.btWrite(message.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
         btnAnnounce.setOnClickListener(btnClick);
         btnDiscover.setOnClickListener(btnClick);
+        lvBtDeviceNames.setOnItemClickListener(clickPhone);
     }
-
-
 
 
     @Override

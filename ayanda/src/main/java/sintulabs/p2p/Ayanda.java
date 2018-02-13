@@ -1,10 +1,12 @@
 package sintulabs.p2p;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -75,9 +77,18 @@ public class Ayanda {
         bt.announce();
     }
 
+    /**
+     * Get the names of the Bluetooth devices discovered
+     * @return
+     */
     public Set<String> btGetDeviceNamesDiscovered() {
         return bt.getDeviceNamesDiscovered();
     }
+
+    public HashMap<String, BluetoothDevice> btGetDevices() {
+        return bt.getDeviceList();
+    }
+
 
     public void lanShare (NearbyMedia media) throws IOException {
         lan.shareFile(media);

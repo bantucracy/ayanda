@@ -17,4 +17,6 @@ public interface IBluetooth {
     void scanModeChange(Intent intent);
     // Bluethooth.Device ACTION_FOUND
     void actionFound(Intent intent);
+    // Event after reading from connected device
+    void dataRead(byte[] bytes, int numRead);
 }
