@@ -130,7 +130,7 @@ public class BluetoothActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 BluetoothDevice device = devices.get(peerNames.get(pos));
-                 a.btConnect(device);
+                a.btConnect(device);
             }
         };
 
