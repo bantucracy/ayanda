@@ -186,7 +186,6 @@ public class Bluetooth extends P2P {
                 }
                 iBluetooth.stateChanged(intent);
             }
-
         };
     }
 
@@ -276,10 +275,11 @@ public class Bluetooth extends P2P {
      */
     public void sendData(BluetoothDevice device, byte [] bytes) throws IOException {
         DataTransferThread dataTransferThread;
-        // If there's a connection already setup use the
+        // There's no connection to device yet, so return
         if (!dataTransferThreads.containsKey(device.getAddress())) {
             return;
         }
+        // Use existing connection to write data
         dataTransferThread = dataTransferThreads.get(device.getAddress());
         dataTransferThread.write(bytes);
     }
@@ -316,11 +316,42 @@ public class Bluetooth extends P2P {
      * @param device Bluetooth devices discovered or already paired
      */
     public void connect(BluetoothDevice device) {
-        new ClientThread(device).start();
+        if (connectionExists(device)) {
+            onDeviceConnected(device);
+        } else {
+            new ClientThread(device).start();
+        }
     }
 
-    private void connectionLost() {
+    /**
+     * Determines if a connection to a device exists
+     * @param device
+     * @return Boolean: if connection to device exists
+     */
+    private Boolean connectionExists(BluetoothDevice device) {
+        return dataTransferThreads.containsKey(device.getAddress());
+    }
 
+    /**
+     * Removes connection from collection of connections.
+     * Occurs when a connection to a bluetooth device is lost.
+     * @param device Bluetooth device
+     */
+    private void connectionLost(BluetoothDevice  device) {
+        dataTransferThreads.remove(device.getAddress());
+    }
+
+    /**
+     * Occurs when Bluetooth device is connected
+     * @param device
+     */
+    private void onDeviceConnected(final BluetoothDevice device) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                iBluetooth.connected(device);
+            }
+        });
     }
 
     /**
@@ -402,23 +433,22 @@ public class Bluetooth extends P2P {
 
         @Override
         public void run() {
-            // Discovery while trying to connect slows conneciton down
+            // Discovery while trying to connect slows connection down
             mBluetoothAdapter.cancelDiscovery();
             if (socket != null) {
                 try {
                     socket.connect(); // blocking
-                    // Runnable for main thread
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            iBluetooth.connected(device);
-                        }
-                    });
+                    String address = device.getAddress();
+
                     DataTransferThread dt = new DataTransferThread(socket);
-                    dataTransferThreads.put(device.getAddress(), dt);
+                    // Check to see is there an existing connection to device
+                    if (!connectionExists(device)) {
+                        dataTransferThreads.put(device.getAddress(), dt);
+                    }
+                    // Notify main thread about the successful connection
+                    onDeviceConnected(device);
                 } catch (IOException e) {
                     e.printStackTrace();
-
                 }
             }
         }
@@ -470,7 +500,6 @@ public class Bluetooth extends P2P {
             inputStream = tmpIn;
             outputStream = tmpOut;
             isConnected = true;
-
         }
 
         /**
@@ -484,11 +513,12 @@ public class Bluetooth extends P2P {
 
         @Override
         public void run() {
-            while(isConnected) {
+            while(connectionExists(socket.getRemoteDevice())) {
                 try {
                     read(buffer);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    connectionLost(socket.getRemoteDevice());
                     isConnected = false;
                     break;
                 }

@@ -77,8 +77,9 @@ public class BluetoothActivity extends AppCompatActivity {
             }
 
             @Override
-            public void dataRead(byte[] bytes, int numRead) {
-                Toast.makeText(BluetoothActivity.this, bytes.toString(), Toast.LENGTH_LONG)
+            public void dataRead(byte[] bytes, int length) {
+                String readMessage = new String(bytes, 0, length);
+                Toast.makeText(BluetoothActivity.this, readMessage, Toast.LENGTH_LONG)
                         .show();
             }
 
