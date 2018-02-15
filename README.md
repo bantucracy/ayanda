@@ -30,29 +30,37 @@ ILan iLan = new ILan() {
 
 a = new Ayanda(this, null, iLan, null);
 a.lanDiscover();
+// INFO: lanDiscover() automatically makes an HTTP connection to services discovered
+```
 
-// Share a file to nearby devices through LAN
+To share a file using NSD (LAN)
+```java
+/* Share a file to nearby devices through LAN */
+
 String filePath = "sdcard/somepic.jpg";
+// NearbyMedia is a helper class to describe a file
 NearbyMedia nearbyMedia = new NearbyMedia();
 nearbyMedia.setMimeType("image/jpeg");
 nearbyMedia.setTitle("pic");
-
 nearbyMedia.setFileMedia(new File(filePath));
 
-//get a JSON representation of the metadata we want to share
+//get a JSON representation of any metadata we want to share
 Gson gson = new GsonBuilder()
         .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
 nearbyMedia.mMetadataJson = gson.toJson("key:value");
+
+// Share the file to devices on LAN registered for current service
 try {
     // Will store on nearby device's "Download" folder.
     a.lanShare(nearbyMedia);
 } catch (IOException e) {
     e.printStackTrace();
 }
+```
 
 
-
-
+Discovering nearby devices by WifiDirect
+```java
 /* Discovering nearby devices by WifiDirect */
 
 a = new Ayanda(this, null, null, new IWifiDirect() {
@@ -83,6 +91,55 @@ a = new Ayanda(this, null, null, new IWifiDirect() {
     });
     
 a.wdDiscover();
+```
+Sharing a file (bytes) using Bluetooth
+```java
+  a = new Ayanda(this, new IBluetooth() {
+            @Override
+            public void actionDiscoveryStarted(Intent intent) {}
+
+            @Override
+            public void actionDiscoveryFinished(Intent intent) {}
+
+            @Override
+            public void stateChanged(Intent intent) {}
+
+            @Override
+            public void scanModeChange(Intent intent) {}
+
+            @Override
+            public void actionFound(Intent intent) {
+                peersAdapter.clear();
+                peersAdapter.addAll(a.btGetDeviceNamesDiscovered());
+                devices = a.btGetDevices();
+            }
+
+            @Override
+            public void dataRead(byte[] bytes, int length) {
+                String readMessage = new String(bytes, 0, length);
+                Toast.makeText(BluetoothActivity.this, readMessage, Toast.LENGTH_LONG)
+                        .show();
+            }
+
+            // Send "Hello World" after connecting to a device
+            @Override
+            public void connected(BluetoothDevice device) {
+                String message = "Hello World";
+                try {
+                    a.btSendData(device, message.getBytes()); // maybe a class for a device that's connected
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, null, null);
+        // Discover nearby Bluetooth devices paired or not
+        a.btDiscover();
+        // Connect to device from list
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+            BluetoothDevice device = devices.get(peerNames.get(pos));
+            a.btConnect(device); // will trigger "connected" event
+        }
 ```
 See Example App in the app folder for more implementation details.
 

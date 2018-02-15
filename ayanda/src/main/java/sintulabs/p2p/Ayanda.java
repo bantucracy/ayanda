@@ -1,10 +1,12 @@
 package sintulabs.p2p;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +21,14 @@ public class Ayanda {
 
     private Context context;
 
+    /**
+     * Ayanda is a class that discovers and interacts with nearby devices that support
+     * Network Service Discovery (NSD), WiFi Direct, and  Bluetooth
+     * @param context The Activity/Application Context
+     * @param iBluetooth An interface to handle Bluetooth events
+     * @param iLan An interface to handle LAN (NSD/Bonjour/ZeroConfig/etc.,) events
+     * @param iWifiDirect An interface to handle Wifi Direct events
+     */
     public Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
         this.context = context;
         bt = new Bluetooth(context, iBluetooth);
@@ -26,29 +36,67 @@ public class Ayanda {
         wd = new WifiDirect(context, iWifiDirect);
     }
 
-    /*
-        Discover nearby devices that have made themselves detectable blue Bluetooth
-        Discovers nearby devices and stores them in a collection of devices found.
+    /**
+     * Discover nearby devices that have made themselves detectable via blue Bluetooth.
+     * Discovered devices are stored in a collection of devices found.
      */
     public void btDiscover() {
         bt.discover();
     }
 
+    /**
+     * Connects to a discovered bluetooth device. Role: Client
+     * @param device Bluetooth Device
+     */
+    public void btConnect(BluetoothDevice device) {
+       bt.connect(device);
+    }
+
+    /**
+     * Register a Bluetooth Broadcast Receiver.
+     * This method must be called to detect Bluetooth events. The iBluetooth interface
+     * exposes Bluetooth events.
+     */
     public void btRegisterReceivers() {
         bt.registerReceivers();
     }
 
+    /**
+     * Unregisters Bluetooth Broadcast Receiver.
+     * Must be called when Activity/App stops/closes
+     */
     public void btUnregisterReceivers() {
         bt.unregisterReceivers();
     }
 
+    /**
+     * Announce device's presence via Bluetooth
+     */
     public void btAnnounce() {
         bt.announce();
     }
 
+    /**
+     * Get the names of the Bluetooth devices discovered
+     * @return
+     */
     public Set<String> btGetDeviceNamesDiscovered() {
         return bt.getDeviceNamesDiscovered();
     }
+
+    public HashMap<String, BluetoothDevice> btGetDevices() {
+        return bt.getDeviceList();
+    }
+
+    /**
+     * Send data from this device to a connected bluetooth device
+     * @param device
+     * @param bytes
+     */
+    public void btSendData(BluetoothDevice device, byte[] bytes) throws IOException {
+        bt.sendData(device, bytes);
+    }
+
 
     public void lanShare (NearbyMedia media) throws IOException {
         lan.shareFile(media);
