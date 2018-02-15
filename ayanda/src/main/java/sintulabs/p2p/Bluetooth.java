@@ -285,15 +285,6 @@ public class Bluetooth extends P2P {
     }
 
     /**
-     * Write's data to a connected device using a Bluetooth RFCOMM channel
-     * @param bytes
-     * @throws IOException if for any reason current device can't write to a client
-     */
-    public void write(byte [] bytes) throws IOException {
-
-    }
-
-    /**
      * Represents a Bluetooth Device
      */
     public static class Device {
@@ -372,6 +363,7 @@ public class Bluetooth extends P2P {
                     DataTransferThread dt = new DataTransferThread(btSocket);
                     BluetoothDevice device = btSocket.getRemoteDevice();
                     dataTransferThreads.put(device.getAddress(), dt);
+                    dt.start();
                 }
                 // client has connected
             } catch (IOException e) {
@@ -462,6 +454,7 @@ public class Bluetooth extends P2P {
             this.socket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
+            buffer = new byte[1024];
 
             try {
                 tmpIn = socket.getInputStream();

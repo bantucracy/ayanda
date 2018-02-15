@@ -51,14 +51,6 @@ public class Ayanda {
     public void btConnect(BluetoothDevice device) {
        bt.connect(device);
     }
-    /**
-     * Current device acts as a server and writes bytes to a connected bluetooth device.
-     * Throws IO exception on an error
-     * @param bytes An array of bytes (file, string etc.,)
-     */
-    public void btWrite(byte[] bytes) throws IOException{
-        bt.write(bytes);
-    }
 
     /**
      * Register a Bluetooth Broadcast Receiver.
