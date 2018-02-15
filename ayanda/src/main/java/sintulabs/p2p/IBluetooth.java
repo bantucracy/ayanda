@@ -1,5 +1,6 @@
 package sintulabs.p2p;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 
 /**
@@ -19,4 +20,6 @@ public interface IBluetooth {
     void actionFound(Intent intent);
     // Event after reading from connected device
     void dataRead(byte[] bytes, int numRead);
+    // connected to a device
+    void connected(BluetoothDevice device);
 }

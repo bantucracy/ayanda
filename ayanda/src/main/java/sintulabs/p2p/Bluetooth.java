@@ -47,6 +47,13 @@ public class Bluetooth extends P2P {
     private HashMap<String, BluetoothDevice> deviceList;
     private Set<BluetoothDevice> pairedDevices;
 
+    // Can only connect to one client a time
+    private DataTransferThread dataTansfer;
+    private HashMap<String, DataTransferThread> dataTransferThreads;
+
+    // Is there an active connection
+    public Boolean isConnected = false;
+
     public static String UUID = "00001101-0000-1000-8000-00805F9B34AC"; // arbitrary
     public static String NAME = "AyandaSecure";
     public static String NAME_INSECURE = "AyandaInsecure";
@@ -61,6 +68,10 @@ public class Bluetooth extends P2P {
         mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
         deviceNamesDiscovered = new HashSet<>();
         deviceList = new HashMap<>();
+        dataTransferThreads = new HashMap<>();
+        if (isSupported()) {
+            enable();
+        }
         createIntentFilter();
         createReceiver();
         // ensure to register and unregister receivers
@@ -90,6 +101,7 @@ public class Bluetooth extends P2P {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             context.startActivity(discoverableIntent);
+            new ServerThread(true).start();
         }
     }
 
@@ -179,9 +191,10 @@ public class Bluetooth extends P2P {
     }
 
     /**
-     * Get nearby devices already paired with using Bluetooth
+     * Get nearby devices already paired with using Bluetooth.
+     * Notifies iBluetooth interface when a device is found
      */
-    private void getPairedDevices() {
+    private void findPairedDevices() {
         pairedDevices = mBluetoothAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             // There are paired devices. Get the name and address of each paired device.
@@ -196,6 +209,15 @@ public class Bluetooth extends P2P {
                 }
             }
         }
+    }
+
+    /**
+     * Calls a helper method to retrieve paired devices.
+     * @return returns list of paired devices
+     */
+    public Set<BluetoothDevice> getPairedDevices() {
+        findPairedDevices();
+        return pairedDevices;
     }
 
     /**
@@ -244,20 +266,23 @@ public class Bluetooth extends P2P {
     public Set<String> getDeviceNamesDiscovered() {
        return deviceNamesDiscovered;
     }
-    @Override
-    public void disconnect() {
+
+
+    /**
+     * Send data to bluetooth device.
+     * There must be an existing connection in place
+     * @param device Nearyby bluetooth device
+     * @param bytes Array of bytes to send
+     */
+    public void sendData(BluetoothDevice device, byte [] bytes) throws IOException {
+        DataTransferThread dataTransferThread;
+        // If there's a connection already setup use the
+        if (!dataTransferThreads.containsKey(device.getAddress())) {
+            return;
+        }
+        dataTransferThread = dataTransferThreads.get(device.getAddress());
+        dataTransferThread.write(bytes);
     }
-
-    @Override
-    public void send() {
-
-    }
-
-    @Override
-    public void cancel() {
-
-    }
-
 
     /**
      * Write's data to a connected device using a Bluetooth RFCOMM channel
@@ -265,17 +290,7 @@ public class Bluetooth extends P2P {
      * @throws IOException if for any reason current device can't write to a client
      */
     public void write(byte [] bytes) throws IOException {
-        announce();
-        new ServerThread(bytes, true);
-    }
 
-    /**
-     * Connects to a Bluetooth device and begins reading form bluetooth device
-     * @param device A bluetooth Device
-     * @throws IOException
-     */
-    public void read(BluetoothDevice device) throws IOException {
-        new ClientThread(device).start();
     }
 
     /**
@@ -306,18 +321,27 @@ public class Bluetooth extends P2P {
     }
 
     /**
+     * Connects, as a client,  to a Bluetooth Device
+     * @param device Bluetooth devices discovered or already paired
+     */
+    public void connect(BluetoothDevice device) {
+        new ClientThread(device).start();
+    }
+
+    private void connectionLost() {
+
+    }
+
+    /**
      *  Creates Sever to receive connections from other bluetooth devices
      */
     private class ServerThread extends Thread {
         // Server
         private BluetoothServerSocket btServerSocket;
         private BluetoothSocket btSocket;
-        private DataTansfer dataTansfer = null;
         private String socketType;
-        private byte[] bytes;
 
-        public ServerThread(byte [] bytes, boolean secure) {
-            this.bytes = bytes;
+        public ServerThread(boolean secure) {
             socketType = secure ? "Secure" : "Insecure";
             BluetoothServerSocket tmp = null;
             // Create a new listening server socket
@@ -340,23 +364,21 @@ public class Bluetooth extends P2P {
         @Override
         public void run() {
             try {
-                btSocket = btServerSocket.accept();
+               btSocket = btServerSocket.accept();
                 //bluetooth server accepts 1 connection at a time so close after new connection
                 btServerSocket.close();
                 // begin writing data
                 if (btSocket != null) {
-                    new DataTansfer(btSocket).write(bytes);
-                } else {
-                    Log.d(TAG_DEBUG, "Unable to write data: btScocket null");
+                    DataTransferThread dt = new DataTransferThread(btSocket);
+                    BluetoothDevice device = btSocket.getRemoteDevice();
+                    dataTransferThreads.put(device.getAddress(), dt);
                 }
                 // client has connected
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-
         }
-        // close open thread
+       // close open thread
         public void close() {
             try {
                 btServerSocket.close();
@@ -372,10 +394,12 @@ public class Bluetooth extends P2P {
      */
     private class ClientThread extends Thread {
         private BluetoothSocket socket = null;
-        private DataTansfer dataTansfer = null;
+        private DataTransferThread dataTansfer;
+        private BluetoothDevice device;
 
 
         public ClientThread(BluetoothDevice device) {
+            this.device = device;
             try {
                 socket = device.createRfcommSocketToServiceRecord(
                         java.util.UUID.fromString(UUID));
@@ -386,26 +410,32 @@ public class Bluetooth extends P2P {
 
         @Override
         public void run() {
+            // Discovery while trying to connect slows conneciton down
+            mBluetoothAdapter.cancelDiscovery();
             if (socket != null) {
                 try {
-                    socket.connect();
-                    final byte[] bytes = new byte[1024];
-                    final int numRead = new DataTansfer(socket).read(bytes);
-                    socket.close();
-                    // Bytes
+                    socket.connect(); // blocking
+                    // Runnable for main thread
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            iBluetooth.dataRead(bytes, numRead);
+                            iBluetooth.connected(device);
                         }
                     });
+                    DataTransferThread dt = new DataTransferThread(socket);
+                    dataTransferThreads.put(device.getAddress(), dt);
                 } catch (IOException e) {
                     e.printStackTrace();
+
                 }
             }
         }
 
-        public void cancel() {
+        /**
+         *
+         * @param socket Open Socket to a device acting as a server
+         */
+        public void close(BluetoothSocket socket) {
             try {
                 socket.close();
             } catch (IOException e) {
@@ -417,16 +447,18 @@ public class Bluetooth extends P2P {
     /**
      * Represents an ative connection between this device and another device.
      */
-    private class DataTansfer {
+    private class DataTransferThread extends Thread {
         private final BluetoothSocket socket;
         private final InputStream inputStream;
         private final OutputStream outputStream;
+        private byte[] buffer;
+
 
         /**
          * Creates InputStream & Output Stream from Bluetooth Scoket
          * @param socket Bluetooth socket representing active connection
          */
-        public DataTansfer(BluetoothSocket socket) {
+        public DataTransferThread(BluetoothSocket socket) {
             this.socket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
@@ -444,6 +476,8 @@ public class Bluetooth extends P2P {
 
             inputStream = tmpIn;
             outputStream = tmpOut;
+            isConnected = true;
+
         }
 
         /**
@@ -455,15 +489,49 @@ public class Bluetooth extends P2P {
             outputStream.write(bytes);
         }
 
+        @Override
+        public void run() {
+            while(isConnected) {
+                try {
+                    read(buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    isConnected = false;
+                    break;
+                }
+            }
+        }
+
         /**
          * Read data from connected device
          * @param buffer A buffer to store data read
          * @return number of bytes read as an int
          * @throws IOException
          */
-        public int read(byte[] buffer) throws IOException {
-            return inputStream.read(buffer);
+        public void read(final byte[] buffer) throws IOException {
+            final int numRead = inputStream.read(buffer);
+            // Runnable for main thread
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    iBluetooth.dataRead(buffer, numRead);
+                }
+            });
         }
+    }
+
+    @Override
+    public void disconnect() {
+    }
+
+    @Override
+    public void send() {
+
+    }
+
+    @Override
+    public void cancel() {
+
     }
 
 }

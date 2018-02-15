@@ -45,6 +45,13 @@ public class Ayanda {
     }
 
     /**
+     * Connects to a discovered bluetooth device. Role: Client
+     * @param device Bluetooth Device
+     */
+    public void btConnect(BluetoothDevice device) {
+       bt.connect(device);
+    }
+    /**
      * Current device acts as a server and writes bytes to a connected bluetooth device.
      * Throws IO exception on an error
      * @param bytes An array of bytes (file, string etc.,)
@@ -87,6 +94,15 @@ public class Ayanda {
 
     public HashMap<String, BluetoothDevice> btGetDevices() {
         return bt.getDeviceList();
+    }
+
+    /**
+     * Send data from this device to a connected bluetooth device
+     * @param device
+     * @param bytes
+     */
+    public void btSendData(BluetoothDevice device, byte[] bytes) throws IOException {
+        bt.sendData(device, bytes);
     }
 
 

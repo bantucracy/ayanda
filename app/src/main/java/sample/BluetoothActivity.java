@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,7 +78,18 @@ public class BluetoothActivity extends AppCompatActivity {
 
             @Override
             public void dataRead(byte[] bytes, int numRead) {
+                Toast.makeText(BluetoothActivity.this, bytes.toString(), Toast.LENGTH_LONG)
+                        .show();
+            }
 
+            @Override
+            public void connected(BluetoothDevice device) {
+                String message = "Hello World";
+                try {
+                    a.btSendData(device, message.getBytes()); // maybe a class for a device that's connected
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }, null, null);
 
@@ -117,12 +129,7 @@ public class BluetoothActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 BluetoothDevice device = devices.get(peerNames.get(pos));
-                String message = "Hello World";
-                try {
-                    a.btWrite(message.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                 a.btConnect(device);
             }
         };
 
