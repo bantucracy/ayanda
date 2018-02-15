@@ -29,6 +29,7 @@ import static android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
 import static android.bluetooth.BluetoothAdapter.STATE_ON;
+import static android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED;
 
 
 /**
@@ -445,6 +446,7 @@ public class Bluetooth extends P2P {
                     if (!connectionExists(device)) {
                         dataTransferThreads.put(device.getAddress(), dt);
                     }
+                    dt.start();
                     // Notify main thread about the successful connection
                     onDeviceConnected(device);
                 } catch (IOException e) {
@@ -505,10 +507,16 @@ public class Bluetooth extends P2P {
         /**
          * write bytes to connected device
          * @param bytes
-         * @throws IOException
+         * @throws IOException if error occurs, such as connection being lost
          */
         public void write(byte[] bytes) throws IOException {
-            outputStream.write(bytes);
+            try {
+                outputStream.write(bytes);
+            } catch (IOException e) {
+                connectionLost(socket.getRemoteDevice());
+                e.printStackTrace();
+                throw new IOException(e);
+            }
         }
 
         @Override
@@ -519,7 +527,6 @@ public class Bluetooth extends P2P {
                 } catch (IOException e) {
                     e.printStackTrace();
                     connectionLost(socket.getRemoteDevice());
-                    isConnected = false;
                     break;
                 }
             }
