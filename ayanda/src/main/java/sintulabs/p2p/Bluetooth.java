@@ -514,6 +514,7 @@ public class Bluetooth extends P2P {
                 outputStream.write(bytes);
             } catch (IOException e) {
                 connectionLost(socket.getRemoteDevice());
+                socket.close();
                 e.printStackTrace();
                 throw new IOException(e);
             }
@@ -527,6 +528,11 @@ public class Bluetooth extends P2P {
                 } catch (IOException e) {
                     e.printStackTrace();
                     connectionLost(socket.getRemoteDevice());
+                    try {
+                        socket.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
                     break;
                 }
             }
