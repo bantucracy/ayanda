@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -37,7 +38,7 @@ import java.util.Set;
 
 public class Lan extends P2P {
     // constants for identifying service and service type
-    public final static String SERVICE_NAME_DEFAULT = "NSDaya";
+    public final static String SERVICE_NAME_DEFAULT = "NSDaya_" + Build.PRODUCT;
     public final static String SERVICE_TYPE = "_http._tcp.";
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
