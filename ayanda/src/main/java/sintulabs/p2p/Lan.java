@@ -35,7 +35,7 @@ import java.util.Set;
  * Created by sabzo on 12/26/17.
  */
 
-public class Lan extends P2P{
+public class Lan extends P2P {
     // constants for identifying service and service type
     public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
@@ -88,7 +88,7 @@ public class Lan extends P2P{
     @Override
     public void announce() {
         // Create the NsdServiceInfo object, and populate it.
-        NsdServiceInfo serviceInfo  = new NsdServiceInfo();
+        NsdServiceInfo serviceInfo = new NsdServiceInfo();
         try {
             localPort = findOpenSocket();
         } catch (IOException e) {
@@ -100,7 +100,7 @@ public class Lan extends P2P{
         serviceInfo.setServiceType(SERVICE_TYPE);
         serviceInfo.setPort(localPort);
 
-        mNsdManager = (NsdManager)mContext.getSystemService(Context.NSD_SERVICE);
+        mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
 
         if (mRegistrationListener == null)
             initializeRegistrationListener();
@@ -158,7 +158,7 @@ public class Lan extends P2P{
         // Initialize a server socket on the next available port.
         ServerSocket serverSocket = new ServerSocket(0);
         // Store the chosen port.
-        int port =  serverSocket.getLocalPort();
+        int port = serverSocket.getLocalPort();
         serverSocket.close();
         return port;
     }
@@ -193,7 +193,7 @@ public class Lan extends P2P{
                     // Service already discovered -- ignore it!
                 }
                 // Make sure service is the expect type and name
-                else if ( service.getServiceType().equals(SERVICE_TYPE) &&
+                else if (service.getServiceType().equals(SERVICE_TYPE) &&
                         service.getServiceName().contains(SERVICE_NAME_DEFAULT)) {
 
                     mNsdManager.resolveService(service, new NsdManager.ResolveListener() {
@@ -243,7 +243,7 @@ public class Lan extends P2P{
                 String match;
                 for (int i = 0; i < deviceList.size(); i++) {
                     match = deviceList.get(i).getName();
-                        if (deviceName.contains(match)) {
+                    if (deviceName.contains(match)) {
                         pos = i;
                         break;
                     }
@@ -253,6 +253,7 @@ public class Lan extends P2P{
                 }
                 updateDeviceList();
             }
+
             @Override
             public void onServiceLost(NsdServiceInfo service) {
                 // When the network service is no longer available.
@@ -328,7 +329,7 @@ public class Lan extends P2P{
                     device.getHost().getHostName(), Neighbor.TYPE_WIFI_NSD);
 
             iLan.transferProgress(neighbor, fileOut, media.mTitle, media.mMimeType, 50,
-                    Long.parseLong(response.header("Content-Length","0")));
+                    Long.parseLong(response.header("Content-Length", "0")));
 
 
             BufferedSink sink = Okio.buffer(Okio.sink(fileOut));
@@ -364,7 +365,7 @@ public class Lan extends P2P{
     /* Create a Request Object */
     private Request buildRequest(StringBuilder url) {
         return new Request.Builder().url(url.toString())
-                .addHeader("NearbyClientId", clientID) .build();
+                .addHeader("NearbyClientId", clientID).build();
     }
 
     private File createFile(String mTitle) {
@@ -375,8 +376,7 @@ public class Lan extends P2P{
     private void setFileExtension(NearbyMedia media) {
         String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(media.mMimeType);
 
-        if (fileExt == null)
-        {
+        if (fileExt == null) {
             if (media.mMimeType.startsWith("image"))
                 fileExt = "jpg";
             else if (media.mMimeType.startsWith("video"))
@@ -421,9 +421,11 @@ public class Lan extends P2P{
         public InetAddress getHost() {
             return host;
         }
+
         public Integer getPort() {
             return port;
         }
+
         public String getName() {
             return serviceInfo.getServiceName();
         }
@@ -449,22 +451,16 @@ public class Lan extends P2P{
         @Override
         public Response serve(IHTTPSession session) {
 
-            if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH))
-            {
+            if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH)) {
                 try {
                     return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.mFileMedia));
+                } catch (IOException ioe) {
+                    return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", ioe.getLocalizedMessage());
                 }
-                catch (IOException ioe)
-                {
-                    return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR,"text/plain",ioe.getLocalizedMessage());
-                }
-            }
-            else if (session.getUri().endsWith(SERVICE_DOWNLOAD_METADATA_PATH))
-            {
-                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK,"text/plain", fileToShare.mMetadataJson);
+            } else if (session.getUri().endsWith(SERVICE_DOWNLOAD_METADATA_PATH)) {
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/plain", fileToShare.mMetadataJson);
 
-            }
-            else {
+            } else {
                 String msg = "<html><body><h1>Hello server</h1>\n";
                 Map<String, String> parms = session.getParms();
                 if (parms.get("username") == null) {
