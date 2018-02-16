@@ -10,6 +10,12 @@ import android.os.Looper;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
+import fi.iki.elonen.NanoHTTPD;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okio.BufferedSink;
+import okio.Okio;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -21,15 +27,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import fi.iki.elonen.NanoHTTPD;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okio.BufferedSink;
-import okio.Okio;
 
 /**
  * Created by sabzo on 12/26/17.
@@ -388,10 +388,16 @@ public class Lan extends P2P{
     }
 
     /* Use WiFi Address as a unique device id */
-    private String getWifiAddress (Context context) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    private String getWifiAddress(Context context) {
+        Context applicationContext = context.getApplicationContext();
+        WifiManager wifiManager = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null) {
+            return "noip";
+        }
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
-        return String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
+        // handle IPv6!
+        return String.format(Locale.ENGLISH,
+                "%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
                 (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
 
     }
