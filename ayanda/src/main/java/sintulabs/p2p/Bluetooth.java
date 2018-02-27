@@ -29,7 +29,6 @@ import static android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE;
 import static android.bluetooth.BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
 import static android.bluetooth.BluetoothAdapter.STATE_ON;
-import static android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED;
 
 
 /**
@@ -48,8 +47,6 @@ public class Bluetooth extends P2P {
     private HashMap<String, BluetoothDevice> deviceList;
     private Set<BluetoothDevice> pairedDevices;
 
-    // Can only connect to one client a time
-    private DataTransferThread dataTansfer;
     private HashMap<String, DataTransferThread> dataTransferThreads;
 
     // Is there an active connection
