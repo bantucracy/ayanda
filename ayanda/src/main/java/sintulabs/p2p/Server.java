@@ -35,30 +35,34 @@ public class Server {
     }
 
     private void accept() throws IOException {
-        socket = serverSocket.accept();
+        while (true) {
+            socket = serverSocket.accept();
 
-        try {
-            in = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
 
-            String msg = "Sending JSON to client: " + socket.getInetAddress().toString();
-            // msg += "\n " + responseArray;
-            Message message = Message.obtain();
-            message.obj = msg;
-            Log.d("server_debug", msg);
-            out.println("hi");
+            try {
+                in = new BufferedReader(
+                        new InputStreamReader(socket.getInputStream()));
+                out = new PrintWriter(socket.getOutputStream(), true);
 
-        } catch (IOException e) {
-            Log.d("wifi_debug", "server error: " + e.toString());
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException ioe) {
+                String msg = "Sending JSON to client: " + socket.getInetAddress().toString();
+                // msg += "\n " + responseArray;
+                Message message = Message.obtain();
+                message.obj = msg;
+                Log.d("server_debug", msg);
+                out.println("hi");
+
+            } catch (IOException e) {
+                Log.d("wifi_debug", "server error: " + e.toString());
+            } finally {
+                if (socket != null) {
+                    try {
+                        socket.close();
+                    } catch (IOException ioe) {
+                    }
                 }
             }
         }
+
     }
 
     /**

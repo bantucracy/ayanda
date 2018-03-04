@@ -44,6 +44,8 @@ public class WifiDirect extends P2P {
     private Server server;
     private int serverPort = 0;
     private Client client;
+    private Boolean isClient = false;
+    private Boolean isServer = false;
 
     /**
      * Creates a WifiDirect instance
@@ -171,8 +173,10 @@ public class WifiDirect extends P2P {
                         isGroupOwner = wifiP2pInfo.isGroupOwner;
                         groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
                         if (isGroupOwner) {
+                            isServer = true;
                             onConnectedAsGroupOwner();
                         } else {
+                            isClient = true;
                             onConnectedAsClient();
                         }
                     }
@@ -197,7 +201,7 @@ public class WifiDirect extends P2P {
 
     public void createServer(final int port) throws IOException {
         new Thread(new Runnable() {
-            @Override
+            @Overrissde
             public void run() {
                 try {
                     new Server(port);
@@ -277,7 +281,6 @@ public class WifiDirect extends P2P {
         config.wps.setup = WpsInfo.PBC;
 
         wifiP2pManager.connect(wifiDirectChannel,config, new WifiP2pManager.ActionListener() {
-
             @Override
             public void onSuccess() {
                 // WiFiDirectBroadcastReceiver notifies us. Ignore for now.
@@ -290,6 +293,11 @@ public class WifiDirect extends P2P {
         });
     }
 
+    /**
+     * Should be called when a connection has already been made to WifiP2pDevice
+     * @param device
+     * @param bytes
+     */
     public void sendData(WifiP2pDevice device, byte[] bytes) {
 
     }
@@ -325,6 +333,21 @@ public class WifiDirect extends P2P {
         alert.show();
     }
 
+    /**
+     * Determines if device is connected and acting as a client
+     * @return
+     */
+    public Boolean isClient() {
+        return isClient;
+    }
+
+    /**
+     * Determines if device is connected and acting as a server (GroupOwner)
+     * @return
+     */
+    public Boolean getIsServer() {
+       return isServer;
+    }
 
 
     @Override
