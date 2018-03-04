@@ -287,6 +287,7 @@ public class Lan extends P2P {
         startDiscovery();
     }
 
+
     private void startDiscovery() {
         mNsdManager.discoverServices(
                 SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
@@ -449,9 +450,9 @@ public class Lan extends P2P {
             start();
         }
 
+
         @Override
         public Response serve(IHTTPSession session) {
-
             if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH)) {
                 try {
                     return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.mFileMedia));
@@ -472,21 +473,5 @@ public class Lan extends P2P {
                 return NanoHTTPD.newFixedLengthResponse(msg + "</body></html>\n");
             }
         }
-
-    }
-
-    @Override
-    public void disconnect() {
-
-    }
-
-    @Override
-    public void send() {
-
-    }
-
-    @Override
-    public void cancel() {
-
     }
 }

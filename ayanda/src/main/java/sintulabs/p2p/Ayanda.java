@@ -126,8 +126,18 @@ public class Ayanda {
     }
 
     /* Wifi Direct Methods */
-    /*
-        Discover nearby WiFi Direct enabled devices
+
+    /**
+     *
+     * @param device to send data to
+     * @param bytes array of data to send
+     */
+    public void wdSendData(WifiP2pDevice device, byte[] bytes) {
+        wd.sendData(device, bytes);
+    }
+
+    /**
+     * Discover nearby WiFi Direct enabled devices
      */
     public void wdDiscover() {
         wd.discover();

@@ -553,18 +553,4 @@ public class Bluetooth extends P2P {
         }
     }
 
-    @Override
-    public void disconnect() {
-    }
-
-    @Override
-    public void send() {
-
-    }
-
-    @Override
-    public void cancel() {
-
-    }
-
 }

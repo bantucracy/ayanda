@@ -7,26 +7,20 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import android.content.IntentSender;
 import android.location.LocationManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
@@ -41,10 +35,15 @@ public class WifiDirect extends P2P {
     private Context context;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
-    private WifiP2pManager.ConnectionInfoListener connectionInfoListener;
     private Boolean wiFiP2pEnabled = false;
+    private Boolean isGroupOwner = false;
+    private InetAddress groupOwnerAddress;
     private ArrayList <WifiP2pDevice> peers = new ArrayList();
     private IWifiDirect iWifiDirect;
+
+    private Server server;
+    private int serverPort = 0;
+    private Client client;
 
     /**
      * Creates a WifiDirect instance
@@ -164,10 +163,66 @@ public class WifiDirect extends P2P {
         if (networkInfo.isConnected()) {
             // We are connected with the other device, request connection
             // info to find group owner IP
-            // wifiP2pManager.requestConnectionInfo(wifiDirectChannel, connectionInfoListener);
+            // TODO Find group owner port
+            wifiP2pManager.requestConnectionInfo(wifiDirectChannel, new WifiP2pManager.ConnectionInfoListener() {
+                @Override
+                public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+                    if (wifiP2pInfo.groupFormed) {
+                        isGroupOwner = wifiP2pInfo.isGroupOwner;
+                        groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
+                        if (isGroupOwner) {
+                            onConnectedAsGroupOwner();
+                        } else {
+                            onConnectedAsClient();
+                        }
+                    }
+                }
+            });
         }
         iWifiDirect.wifiP2pConnectionChangedAction(intent);
     }
+
+    /**
+     * This device connected as a group owner (server).
+     */
+    private void onConnectedAsGroupOwner() {
+        try {
+            if (server == null) {
+                server = new Server(serverPort);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createServer(final int port) throws IOException {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    new Server(port);
+                } catch (IOException e) {
+                    // TODO Notify user of failure
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * This device connected as a client
+     */
+    private void onConnectedAsClient() {
+        if (client == null) {
+            try {
+                client = new Client(groupOwnerAddress.getHostAddress(), serverPort);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 
     public void wifiP2pThisDeviceChangedAction(Intent intent) {
         iWifiDirect.wifiP2pThisDeviceChangedAction(intent);
@@ -233,20 +288,20 @@ public class WifiDirect extends P2P {
 
             }
         });
-
     }
 
+    public void sendData(WifiP2pDevice device, byte[] bytes) {
+
+    }
     /**
      * Android 8.0+ requires location to be turned on when discovering
      * nearby devices.
      * @return boolean
      */
     public boolean isLocationOn() {
-
         final LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         return manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
-
 
     /**
      * Enable location
@@ -270,27 +325,14 @@ public class WifiDirect extends P2P {
         alert.show();
     }
 
+
+
     @Override
     public void announce() {}
 
     @Override
     public void discover() {
         discoverPeers();
-    }
-
-    @Override
-    public void disconnect() {
-
-    }
-
-    @Override
-    public void send() {
-
-    }
-
-    @Override
-    public void cancel() {
-
     }
 
     /**
