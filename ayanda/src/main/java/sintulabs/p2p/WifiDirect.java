@@ -43,7 +43,6 @@ public class WifiDirect extends P2P {
 
     private Server server;
     private int serverPort = 0;
-    private Client client;
     private Boolean isClient = false;
     private Boolean isServer = false;
 
@@ -190,43 +189,21 @@ public class WifiDirect extends P2P {
      * This device connected as a group owner (server).
      */
     private void onConnectedAsGroupOwner() {
-        try {
-            if (server == null) {
-                server = new Server(serverPort);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void createServer(final int port) throws IOException {
-        new Thread(new Runnable() {
-            @Overrissde
-            public void run() {
-                try {
-                    new Server(port);
-                } catch (IOException e) {
-                    // TODO Notify user of failure
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
-    /**
-     * This device connected as a client
-     */
-    private void onConnectedAsClient() {
-        if (client == null) {
+        if (server == null) {
             try {
-                client = new Client(groupOwnerAddress.getHostAddress(), serverPort);
+                server = new Server(serverPort);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    /**
+     * This device connected as a client
+     */
+    private void onConnectedAsClient() {
 
+    }
 
     public void wifiP2pThisDeviceChangedAction(Intent intent) {
         iWifiDirect.wifiP2pThisDeviceChangedAction(intent);
@@ -288,7 +265,7 @@ public class WifiDirect extends P2P {
 
             @Override
             public void onFailure(int reason) {
-
+                // todo if failure == 2 (busy) try again
             }
         });
     }
@@ -299,6 +276,11 @@ public class WifiDirect extends P2P {
      * @param bytes
      */
     public void sendData(WifiP2pDevice device, byte[] bytes) {
+
+
+    }
+
+    public void shareFile(NearbyMedia file) {
 
     }
     /**

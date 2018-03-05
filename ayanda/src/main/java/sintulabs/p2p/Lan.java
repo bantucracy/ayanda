@@ -455,12 +455,12 @@ public class Lan extends P2P {
         public Response serve(IHTTPSession session) {
             if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH)) {
                 try {
-                    return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.mFileMedia));
+                    return NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.getFileMedia()));
                 } catch (IOException ioe) {
                     return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", ioe.getLocalizedMessage());
                 }
             } else if (session.getUri().endsWith(SERVICE_DOWNLOAD_METADATA_PATH)) {
-                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/plain", fileToShare.mMetadataJson);
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/plain", fileToShare.getMetadataJson());
 
             } else {
                 String msg = "<html><body><h1>Hello server</h1>\n";

@@ -135,7 +135,6 @@ public class LanActivity extends AppCompatActivity {
     }
 
 
-
     private void setListeners() {
         View.OnClickListener btnClick = new View.OnClickListener() {
             @Override

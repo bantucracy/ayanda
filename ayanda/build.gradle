@@ -26,7 +26,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.squareup.okio:okio:1.13.0'
-    compile 'com.nanohttpd:nanohttpd-webserver:2.2+'
+    compile 'org.nanohttpd:nanohttpd:2.3.1'
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })

@@ -136,6 +136,18 @@ public class Ayanda {
         wd.sendData(device, bytes);
     }
 
+    public void wdShareFile (NearbyMedia media) throws IOException {
+        wd.shareFile(media);
+    }
+
+    /**
+     * Connect to a WifiDirect device
+     * @param device
+     */
+    public void wdConnect(WifiP2pDevice device) {
+        wd.connect(device);
+    }
+
     /**
      * Discover nearby WiFi Direct enabled devices
      */
