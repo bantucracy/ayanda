@@ -1,5 +1,6 @@
 package sintulabs.p2p;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -8,30 +9,51 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 /**
  * Client class
  */
 
 public class Client {
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
+    private static OkHttpClient mClient;
+    public static Client client = null;
+    private Context applicationContext;
 
-    public Client(String serverAddress, int port) throws IOException {
-        Log.d("client_debug", "Connecting as a client");
-        socket = new Socket(serverAddress, port);
-        Log.d("client_debug", "made socket request to: " + serverAddress + ":" + port);
-        in = new BufferedReader(
-                new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
-        String message = in.readLine();
-        /*
-        Message m = Message.obtain();
-        m.obj = message;
-        uiHandler.sendMessage(m);
-        */
+    public static Client getInstance( Context applicationContext) {
+        client = (client != null) ? client : new Client(applicationContext);
+        return client;
+    }
 
-        Log.d("client_debug", message);
+    /**
+     * Create a Client object
+     */
+    public Client(Context applicationContext) {
+        if (client == null) {
+            mClient = new OkHttpClient();
+        }
+    }
 
+    public OkHttpClient getHTTPClient() {
+        return mClient;
+    }
+
+    public String run(String url) throws IOException {
+        url = buildUrl(url);
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        Response response = mClient.newCall(request).execute();
+        return response.body().string();
+    }
+
+    private String buildUrl(String url) {
+        StringBuilder sbUrl = new StringBuilder();
+        sbUrl.append("http://");
+        sbUrl.append(url);
+        return sbUrl.toString();
     }
 }

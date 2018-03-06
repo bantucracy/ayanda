@@ -42,7 +42,9 @@ public class WifiDirect extends P2P {
     private IWifiDirect iWifiDirect;
 
     private Server server;
-    private int serverPort = 0;
+    private Client client;
+
+    private int serverPort = 8080;
     private Boolean isClient = false;
     private Boolean isServer = false;
 
@@ -191,7 +193,9 @@ public class WifiDirect extends P2P {
     private void onConnectedAsGroupOwner() {
         if (server == null) {
             try {
+                // TODO: PASS IN NanoHttp user defined server
                 server = new Server(serverPort);
+                iWifiDirect.onConnectedAsGroupOwner(server);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -202,7 +206,10 @@ public class WifiDirect extends P2P {
      * This device connected as a client
      */
     private void onConnectedAsClient() {
-
+        if (client == null) {
+            client = Client.getInstance(context);
+            iWifiDirect.onConnectedAsClient(client, groupOwnerAddress);
+        }
     }
 
     public void wifiP2pThisDeviceChangedAction(Intent intent) {
@@ -265,7 +272,7 @@ public class WifiDirect extends P2P {
 
             @Override
             public void onFailure(int reason) {
-                // todo if failure == 2 (busy) try again
+                // todo if failure == 2
             }
         });
     }

@@ -26,15 +26,18 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
+import sintulabs.p2p.Client;
 import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.Lan;
 import sintulabs.p2p.NearbyMedia;
+import sintulabs.p2p.Server;
 import sintulabs.p2p.WifiDirect;
 
 /**
@@ -82,6 +85,27 @@ public class WifiDirectActivity extends AppCompatActivity {
 
             @Override
             public void wifiP2pThisDeviceChangedAction(Intent intent) {
+
+            }
+
+            @Override
+            public void onConnectedAsGroupOwner(Server server) {
+
+            }
+
+            @Override
+            public void onConnectedAsClient(final Client client, final InetAddress groupOwnerAddress) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String response = client
+                                    .run(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
 
             }
         });
