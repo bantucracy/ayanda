@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -20,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -99,12 +101,18 @@ public class WifiDirectActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-                            String response = client
+                                final String response = client
                                     .run(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080));
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(WifiDirectActivity.this, response, Toast.LENGTH_LONG).show();
+                                }
+                            });
                         } catch (IOException e) {
-                            e.printStackTrace();
+                           e.printStackTrace();
                         }
-                    }
+                   }
                 }).start();
 
             }

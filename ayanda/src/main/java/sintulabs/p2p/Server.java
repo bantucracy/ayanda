@@ -17,6 +17,11 @@ public class Server extends NanoHTTPD {
     @Override
     public Response serve(IHTTPSession session) {
         try {
+            if (fileToShare == null) {
+                return newFixedLengthResponse(
+                        Response.Status.NO_CONTENT, "text/plain", "No content found. Try again"
+                );
+            }
             return newChunkedResponse(Response.Status.OK, fileToShare.getmMimeType(), new FileInputStream(fileToShare.mFileMedia));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -24,7 +29,7 @@ public class Server extends NanoHTTPD {
         }
     }
 
-    public void addFile(NearbyMedia file) {
+    public void setFileToShare(NearbyMedia file) {
         fileToShare = file;
     }
 }

@@ -44,7 +44,7 @@ public class WifiDirect extends P2P {
     private Server server;
     private Client client;
 
-    private int serverPort = 8080;
+    private int  serverPort = 8080;
     private Boolean isClient = false;
     private Boolean isServer = false;
 
@@ -60,6 +60,8 @@ public class WifiDirect extends P2P {
         // IntentFilter for receiver
         createIntent();
         createReceiver();
+        // create/start server ahead of time in case this device becomes a server (groupOwner)
+        //createServer();
     }
 
     /**
@@ -191,6 +193,13 @@ public class WifiDirect extends P2P {
      * This device connected as a group owner (server).
      */
     private void onConnectedAsGroupOwner() {
+        createServer();
+    }
+
+    /**
+     * Start server
+     */
+    private void createServer() {
         if (server == null) {
             try {
                 // TODO: PASS IN NanoHttp user defined server
