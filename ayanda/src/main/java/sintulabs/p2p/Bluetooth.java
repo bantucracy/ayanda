@@ -67,9 +67,6 @@ public class Bluetooth extends P2P {
         deviceNamesDiscovered = new HashSet<>();
         deviceList = new HashMap<>();
         dataTransferThreads = new HashMap<>();
-        if (isSupported()) {
-            enable();
-        }
         createIntentFilter();
         createReceiver();
         // ensure to register and unregister receivers
@@ -96,6 +93,7 @@ public class Bluetooth extends P2P {
     @Override
     public void announce() {
         if (isSupported()) {
+            enable();
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             context.startActivity(discoverableIntent);
@@ -244,6 +242,7 @@ public class Bluetooth extends P2P {
     @Override
     public void discover() {
         if ( isSupported()) {
+            enable();
             discoveryInitiated = true;
             if (!isEnabled()) {
                 enable();
