@@ -43,6 +43,7 @@ public class WifiDirect extends P2P {
 
     private Server server;
     private Client client;
+    private NearbyMedia fileToShare;
 
     private int  serverPort = 8080;
     private Boolean isClient = false;
@@ -296,8 +297,19 @@ public class WifiDirect extends P2P {
 
     }
 
-    public void shareFile(NearbyMedia file) {
+    /**
+     * Set the file to share
+     * @param fileToShare
+     */
+    public void setFileToShare(NearbyMedia fileToShare) {
+       this.fileToShare = fileToShare;
+    }
 
+    public void shareFile(NearbyMedia file) {
+        setFileToShare(file);
+        if (server != null) {
+            server.setFileToShare(file);
+        }
     }
     /**
      * Android 8.0+ requires location to be turned on when discovering

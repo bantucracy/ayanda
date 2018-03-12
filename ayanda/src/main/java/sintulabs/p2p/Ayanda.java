@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -140,6 +141,7 @@ public class Ayanda {
         wd.shareFile(media);
     }
 
+  
     /**
      * Connect to a WifiDirect device
      * @param device
