@@ -56,6 +56,7 @@ public class Lan extends P2P {
     private String clientID = ""; // This device's WiFi ID
     private NsdManager mNsdManager;
     private Boolean serviceAnnounced;
+    private Boolean isDiscovering;
 
     private List<Device> deviceList;
 
@@ -116,7 +117,6 @@ public class Lan extends P2P {
         }
 
         Log.d(TAG_DEBUG, msg);
-        Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
     }
 
 
@@ -222,38 +222,6 @@ public class Lan extends P2P {
                 servicesDiscovered.add(hash);
             }
 
-            /*  Update UI thread that device list has been changed */
-            private void updateDeviceList() {
-                // Runnable for main thread
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        iLan.deviceListChanged();
-                    }
-                });
-
-            }
-
-            private void addDeviceToList(Device device) {
-                deviceList.add(device);
-            }
-
-            private void removeDeviceFromList(Device device) {
-                int pos = -1; // pos of device to remove
-                String deviceName = device.getName();
-                String match;
-                for (int i = 0; i < deviceList.size(); i++) {
-                    match = deviceList.get(i).getName();
-                    if (deviceName.contains(match)) {
-                        pos = i;
-                        break;
-                    }
-                }
-                if (pos != -1) {
-                    deviceList.remove(pos);
-                }
-                updateDeviceList();
-            }
 
             @Override
             public void onServiceLost(NsdServiceInfo service) {
@@ -267,17 +235,20 @@ public class Lan extends P2P {
 
             @Override
             public void onDiscoveryStopped(String serviceType) {
+                isDiscovering = false;
                 Log.i(TAG_DEBUG, "Discovery stopped: " + serviceType);
             }
 
             @Override
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                isDiscovering = false;
                 Log.e(TAG_DEBUG, "Discovery failed: Error code:" + errorCode);
                 mNsdManager.stopServiceDiscovery(this);
             }
 
             @Override
             public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                isDiscovering = false;
                 Log.e(TAG_DEBUG, "Discovery failed: Error code:" + errorCode);
                 mNsdManager.stopServiceDiscovery(this);
             }
@@ -287,9 +258,49 @@ public class Lan extends P2P {
         startDiscovery();
     }
 
+    /*  Update UI thread that device list has been changed */
+    private void updateDeviceList() {
+        // Runnable for main thread
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                iLan.deviceListChanged();
+            }
+        });
+
+    }
+
+    private void addDeviceToList(Device device) {
+        deviceList.add(device);
+    }
+
+    private void removeDeviceFromList(Device device) {
+        int pos = -1; // pos of device to remove
+        String deviceName = device.getName();
+        String match;
+        for (int i = 0; i < deviceList.size(); i++) {
+            match = deviceList.get(i).getName();
+            if (deviceName.contains(match)) {
+                pos = i;
+                break;
+            }
+        }
+        if (pos != -1) {
+            deviceList.remove(pos);
+        }
+        updateDeviceList();
+    }
+
+    /**
+     * Helper method to start discovery
+     */
     private void startDiscovery() {
-        mNsdManager.discoverServices(
-                SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+        if (!isDiscovering) {
+            mNsdManager.discoverServices(
+                    SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+            isDiscovering = true;
+        }
+
     }
 
     public void stopDiscovery() {
@@ -297,6 +308,7 @@ public class Lan extends P2P {
             mNsdManager.stopServiceDiscovery(mDiscoveryListener);
             mDiscoveryListener = null;
             servicesDiscovered.clear();
+            isDiscovering = false;
         }
     }
 
@@ -437,9 +449,9 @@ public class Lan extends P2P {
     public void shareFile(NearbyMedia media) throws IOException {
         this.fileToShare = media;
         if (webServer == null) {
-            announce();
             webServer = new WebServer(localPort);
         }
+        announce();
     }
 
     private class WebServer extends NanoHTTPD {
