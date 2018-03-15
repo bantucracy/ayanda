@@ -53,7 +53,7 @@ public class Client {
         return mClient;
     }
 
-    public String run(String url) throws IOException {
+    public String get(String url) throws IOException {
         url = buildUrl(url, null);
         Request request = new Request.Builder()
                 .url(url)
@@ -101,7 +101,7 @@ public class Client {
         sbUrl.append("http://");
         sbUrl.append(url);
         if (path != null && !path.isEmpty()) {
-            sbUrl.append("/" + path);
+            sbUrl.append(path);
         }
         return sbUrl.toString();
     }

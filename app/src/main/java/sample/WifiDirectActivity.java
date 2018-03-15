@@ -52,7 +52,7 @@ public class WifiDirectActivity extends AppCompatActivity {
     private List peerNames = new ArrayList();
     private ArrayAdapter<String> peersAdapter = null;
 
-    private Button btnWdAnnounce;
+    private Button btnWdShareFile;
     private Button btnWdDiscover;
 
     private Ayanda a;
@@ -91,8 +91,8 @@ public class WifiDirectActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onConnectedAsGroupOwner(Server server) {
-
+            public void onConnectedAsServer(Server server) {
+            
             }
 
             @Override
@@ -100,23 +100,37 @@ public class WifiDirectActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        /*
                         try {
+
                                 final String response = client
-                                    .run(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080));
+                                    .get(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080));
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
                                     Toast.makeText(WifiDirectActivity.this, response, Toast.LENGTH_LONG).show();
                                 }
                             });
+
+
                         } catch (IOException e) {
                            e.printStackTrace();
                         }
-                   }
+                        */
+                        try {
+                            final File file = client.getFile(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }).start();
 
             }
         });
+    }
+
+    private void get(String url) {
+
     }
 
     private void createView() {
@@ -124,7 +138,7 @@ public class WifiDirectActivity extends AppCompatActivity {
         lvDevices = (ListView) findViewById(R.id.lvDevices);
         peersAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, peerNames);
         lvDevices.setAdapter(peersAdapter);
-        btnWdAnnounce = (Button) findViewById(R.id.btnWdAnnounce);
+        btnWdShareFile = (Button) findViewById(R.id.btnWdShareFile);
         btnWdDiscover = (Button) findViewById(R.id.btnWdDiscover);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -136,7 +150,7 @@ public class WifiDirectActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case R.id.btnWdAnnounce:
+                    case R.id.btnWdShareFile:
                         //p2p.announce();
                         onPickPhoto();
                         break;
@@ -153,7 +167,7 @@ public class WifiDirectActivity extends AppCompatActivity {
                 a.wdConnect(device);
             }
         };
-        btnWdAnnounce.setOnClickListener(clickListener);
+        btnWdShareFile.setOnClickListener(clickListener);
         btnWdDiscover.setOnClickListener(clickListener);
         lvDevices.setOnItemClickListener(deviceClick);
     }
@@ -165,7 +179,7 @@ public class WifiDirectActivity extends AppCompatActivity {
             // Do something with the photo based on Uri
             Bitmap selectedImage = null;
             // Load the selected image into a preview
-            ImageView ivPreview = (ImageView) findViewById(R.id.ivPreview);
+            ImageView ivPreview = (ImageView) findViewById(R.id.ivPreviewWD);
             ivPreview.setImageBitmap(selectedImage);
 
             String filePath = getRealPathFromURI(photoUri);

@@ -141,7 +141,7 @@ public class Ayanda {
         wd.shareFile(media);
     }
 
-  
+
     /**
      * Connect to a WifiDirect device
      * @param device

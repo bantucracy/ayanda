@@ -13,6 +13,6 @@ public interface IWifiDirect {
     void wifiP2pPeersChangedAction();
     void wifiP2pConnectionChangedAction(Intent intent);
     void wifiP2pThisDeviceChangedAction(Intent intent);
-    void onConnectedAsGroupOwner(Server server);
+    void onConnectedAsServer(Server server);
     void onConnectedAsClient(Client client, InetAddress groupOwnerAddress);
 }

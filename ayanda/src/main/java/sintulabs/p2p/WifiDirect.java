@@ -178,7 +178,7 @@ public class WifiDirect extends P2P {
                         groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
                         if (isGroupOwner) {
                             isServer = true;
-                            onConnectedAsGroupOwner();
+                            onConnectedAsServer();
                         } else {
                             isClient = true;
                             onConnectedAsClient();
@@ -193,7 +193,7 @@ public class WifiDirect extends P2P {
     /**
      * This device connected as a group owner (server).
      */
-    private void onConnectedAsGroupOwner() {
+    private void onConnectedAsServer() {
         createServer();
     }
 
@@ -205,7 +205,8 @@ public class WifiDirect extends P2P {
             try {
                 // TODO: PASS IN NanoHttp user defined server
                 server = new Server(serverPort);
-                iWifiDirect.onConnectedAsGroupOwner(server);
+                server.setFileToShare(fileToShare);
+                iWifiDirect.onConnectedAsServer(server);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -307,6 +308,7 @@ public class WifiDirect extends P2P {
 
     public void shareFile(NearbyMedia file) {
         setFileToShare(file);
+        discover();
         if (server != null) {
             server.setFileToShare(file);
         }
