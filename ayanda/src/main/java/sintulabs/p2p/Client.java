@@ -77,16 +77,32 @@ public class Client {
         // Request file from server and store details
         try {
             Response response = mClient.newCall(request).execute();
+            String mimeType = response.header("Content-Type", "text/plain");
+
+            String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
+
+            if (fileExt == null) {
+                if (mimeType.startsWith("image"))
+                    fileExt = "jpg";
+                else if (mimeType.startsWith("video"))
+                    fileExt = "mp4";
+                else if (mimeType.startsWith("audio"))
+                    fileExt = "m4a";
+            }
+
+            String title  = new Date().getTime() + "." + fileExt;
+
+
 
             File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            fileOut = new File(dirDownloads, new Date().getTime() + "");
 
-            InputStream inputStream = response.body().byteStream();
+
+            fileOut = new File(dirDownloads, title);
+
 
             BufferedSink sink = Okio.buffer(Okio.sink(fileOut));
             sink.writeAll(response.body().source());
             sink.close();
-
 
         } catch (IOException e) {
             Log.e(TAG, "Unable to connect to url: " + url, e);
