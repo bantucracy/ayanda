@@ -15,8 +15,13 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Date;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
@@ -32,8 +37,9 @@ public class Client {
     public static Client client = null;
     private Context applicationContext;
 
-    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
-    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
+    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/ayanda/file";
+    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/ayanda/meta";
+    public final static String SERVICE_UPOAD_PATH = "/ayanda/upload";
 
     public static Client getInstance( Context applicationContext) {
         client = (client != null) ? client : new Client(applicationContext);
@@ -70,6 +76,43 @@ public class Client {
 
         Response response = mClient.newCall(request).execute();
         return response.body().string();
+    }
+
+    public static Boolean uploadFile(String serverURL, File file) {
+        try {
+
+            RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("file", file.getName(),
+                            RequestBody.create(MediaType.parse("text/csv"), file))
+                    .addFormDataPart("some-field", "some-value")
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(serverURL)
+                    .post(requestBody)
+                    .build();
+
+            mClient.newCall(request).enqueue(new Callback() {
+
+                @Override
+                public void onFailure(Call call, IOException e) {
+
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (!response.isSuccessful()) {
+                        // Handle the error
+                    }
+                }
+
+            });
+
+            return true;
+        } catch (Exception ex) {
+            // Handle the error
+        }
+        return false;
     }
 
     /**
