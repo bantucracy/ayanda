@@ -204,7 +204,7 @@ public class WifiDirect extends P2P {
         if (server == null) {
             try {
                 // TODO: PASS IN NanoHttp user defined server
-                server = new Server(serverPort);
+                server = Server.getInstance(serverPort);
                 server.setFileToShare(fileToShare);
                 iWifiDirect.onConnectedAsServer(server);
             } catch (IOException e) {

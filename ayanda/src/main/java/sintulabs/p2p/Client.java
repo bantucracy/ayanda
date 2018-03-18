@@ -41,6 +41,15 @@ public class Client {
     }
 
     /**
+     * Set a custom user defined Client
+     * @param userDefinedClient
+     * @param applicationContext
+     */
+    public static void setInstance(Client userDefinedClient, Context applicationContext) {
+        client = userDefinedClient;
+    }
+
+    /**
      * Create a Client object
      */
     public Client(Context applicationContext) {
@@ -92,13 +101,9 @@ public class Client {
 
             String title  = new Date().getTime() + "." + fileExt;
 
-
-
             File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
-
             fileOut = new File(dirDownloads, title);
-
 
             BufferedSink sink = Okio.buffer(Okio.sink(fileOut));
             sink.writeAll(response.body().source());

@@ -168,4 +168,20 @@ public class Ayanda {
     public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
         return wd.getDevicesDiscovered();
     }
+
+    /**
+     *  Add a user defined Server class to respond to client calls
+     * @param server A descendant of the server class
+     */
+    public void addServer(Server server) {
+        Server.setInstance(server);
+    }
+
+    /**
+     * Add a user defined Client class. This is used to make calls to the server
+     * @param client
+     */
+    public void addClient(Client client) {
+        Client.setInstance(client, context);
+    }
 }
