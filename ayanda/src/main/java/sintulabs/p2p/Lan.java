@@ -56,7 +56,7 @@ public class Lan extends P2P {
     private String clientID = ""; // This device's WiFi ID
     private NsdManager mNsdManager;
     private Boolean serviceAnnounced;
-    private Boolean isDiscovering;
+    private Boolean isDiscovering = false;
 
     private List<Device> deviceList;
 
@@ -302,6 +302,8 @@ public class Lan extends P2P {
             mNsdManager.discoverServices(
                     SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
             isDiscovering = true;
+        } else {
+            Log.d(TAG_DEBUG, "Service discovery has already been started");
         }
 
     }
