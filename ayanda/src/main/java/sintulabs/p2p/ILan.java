@@ -12,5 +12,5 @@ public interface ILan {
     public void transferComplete (Neighbor neighbor, NearbyMedia media);
     public void transferProgress (Neighbor neighbor, File fileMedia, String title, String mimeType,
                                   long transferred, long total);
-
+    public void serviceRegistered(String serviceName);
 }

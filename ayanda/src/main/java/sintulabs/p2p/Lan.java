@@ -38,7 +38,7 @@ import java.util.Set;
 
 public class Lan extends P2P {
     // constants for identifying service and service type
-    public final static String SERVICE_NAME_DEFAULT = "NSDaya_" + Build.PRODUCT;
+    public final static String SERVICE_NAME_DEFAULT = "NSDaya";
     public final static String SERVICE_TYPE = "_http._tcp.";
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
@@ -131,6 +131,7 @@ public class Lan extends P2P {
                 mServiceName = NsdServiceInfo.getServiceName();
                 serviceAnnounced = true;
                 Log.d(TAG_DEBUG, "successfully registered service " + mServiceName);
+                iLan.serviceRegistered(mServiceName);
             }
 
             @Override
@@ -191,6 +192,7 @@ public class Lan extends P2P {
 
                 if (servicesDiscovered.contains(hash)) {
                     Log.d(TAG_DEBUG, "Service already discovered");
+                    updateDeviceList();
                     // Service already discovered -- ignore it!
                 }
                 // Make sure service is the expect type and name
@@ -211,6 +213,7 @@ public class Lan extends P2P {
                             Device d = new Device(serviceInfo);
                             addDeviceToList(d);
                             connect(d);
+
                             updateDeviceList();
                             Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
                         /* FYI; ServiceType within listener doesn't have a period at the end.
