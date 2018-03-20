@@ -6,7 +6,12 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +45,10 @@ public class Server {
 
         @Override
         public Response serve(IHTTPSession session) {
-            if (fileToShare == null) {
+            if (NanoHTTPD.Method.POST.equals(session.getMethod()) || Method.PUT.equals(session.getMethod())) {
+                return uploadFile(session);
+            }
+            else if (fileToShare == null) {
                 return newFixedLengthResponse(
                         Response.Status.NO_CONTENT, "text/plain", "No content found. Try again"
                 );
@@ -52,10 +60,6 @@ public class Server {
 
             else if(session.getUri().endsWith(SERVICE_DOWNLOAD_METADATA_PATH)) {
                 return newFixedLengthResponse(Response.Status.OK,"text/plain", fileToShare.mMetadataJson);
-            }
-
-            else if (NanoHTTPD.Method.POST.equals(session.getMethod()) || Method.PUT.equals(session.getMethod())) {
-              return uploadFile(session);
             }
 
             else {
@@ -90,14 +94,29 @@ public class Server {
         Map<String, String> files = new HashMap<String, String>();
         Log.d("server","inside receive file!");
         try{
+            String fileExt = "jpg";
             session.parseBody(files);
-            String title  = new Date().getTime() + ".";// + fileExt;
+            String title  = new Date().getTime() + "." + fileExt;
 
             File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            String filename = files.get("file");
 
-            File fileOut = new File(dirDownloads, title);
+            // Read file from temp directory
+            File file = new File(filename);
+            FileInputStream fis = new FileInputStream(filename);
+            byte[] b = new byte[(int)file.length()];
+            fis.read(b);
 
-            File file = new File(files.get("uploadFile"));
+            // write file to external storage
+            file = new File(dirDownloads, title);
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(b);
+
+            /*
+            RandomAccessFile f = new RandomAccessFile(filename, "r");
+            byte[] b = new byte[(int)f.length()];
+            f.readFully(b);
+            */
 
             return newFixedLengthResponse(
                     NanoHTTPD.Response.Status.OK, "text/plain", "File successfully uploaded"

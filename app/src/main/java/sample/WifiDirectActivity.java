@@ -55,6 +55,8 @@ public class WifiDirectActivity extends AppCompatActivity {
     private Button btnWdShareFile;
     private Button btnWdDiscover;
 
+    NearbyMedia nearbyMedia;
+
     private Ayanda a;
 
     @Override
@@ -116,11 +118,16 @@ public class WifiDirectActivity extends AppCompatActivity {
                         } catch (IOException e) {
                            e.printStackTrace();
                         }
-                        */
+
                         try {
                             final File file = client.getFile(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080));
                         } catch (IOException e) {
                             e.printStackTrace();
+                        }
+                        */
+
+                        if (nearbyMedia != null) {
+                           client.uploadFile(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080), nearbyMedia);
                         }
                     }
                 }).start();
@@ -184,19 +191,22 @@ public class WifiDirectActivity extends AppCompatActivity {
 
             String filePath = getRealPathFromURI(photoUri);
 
-            NearbyMedia nearbyMedia = new NearbyMedia();
-            nearbyMedia.setMimeType("image/jpeg");
-            nearbyMedia.setTitle("pic");
 
-            nearbyMedia.setFileMedia(new File(filePath));
-
-            //get a JSON representation of the metadata we want to share
-            Gson gson = new GsonBuilder()
-                    .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
-            nearbyMedia.mMetadataJson = gson.toJson("key:value");
             try {
+                nearbyMedia = new NearbyMedia();
+                nearbyMedia.setMimeType("image/jpeg");
+                nearbyMedia.setTitle("pic");
+
+                nearbyMedia.setFileMedia(new File(filePath));
+
+                //get a JSON representation of the metadata we want to share
+                Gson gson = new GsonBuilder()
+                        .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
+                nearbyMedia.mMetadataJson = gson.toJson("key:value");
+
                 a.wdShareFile(nearbyMedia);
             } catch (IOException e) {
+                nearbyMedia = null;
                 e.printStackTrace();
             }
 

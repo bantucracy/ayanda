@@ -5,14 +5,8 @@ import android.os.Environment;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.Date;
 
 import okhttp3.Call;
@@ -39,7 +33,7 @@ public class Client {
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/ayanda/file";
     public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/ayanda/meta";
-    public final static String SERVICE_UPOAD_PATH = "/ayanda/upload";
+    public final static String SERVICE_UPLOAD_PATH = "/ayanda/upload";
 
     public static Client getInstance( Context applicationContext) {
         client = (client != null) ? client : new Client(applicationContext);
@@ -78,17 +72,18 @@ public class Client {
         return response.body().string();
     }
 
-    public static Boolean uploadFile(String serverURL, File file) {
+    public Boolean uploadFile(String url, NearbyMedia file) {
         try {
+            url = buildUrl(url, SERVICE_UPLOAD_PATH);
 
             RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("file", file.getName(),
-                            RequestBody.create(MediaType.parse("text/csv"), file))
-                    .addFormDataPart("some-field", "some-value")
+                    .addFormDataPart("file", file.getTitle(),
+                            RequestBody.create(MediaType.parse(file.getmMimeType()), file.getFileMedia()))
+                    .addFormDataPart("fileExt", getFileExtension(file.getmMimeType()))
                     .build();
 
             Request request = new Request.Builder()
-                    .url(serverURL)
+                    .url(url)
                     .post(requestBody)
                     .build();
 
@@ -96,21 +91,22 @@ public class Client {
 
                 @Override
                 public void onFailure(Call call, IOException e) {
-
+                    Log.d("", "Upload request unsuccessful");
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     if (!response.isSuccessful()) {
-                        // Handle the error
+                        Log.d("", "Upload unsuccessful");// Handle the error
+                    } else {
+                        Log.d("", "Upload successful");
                     }
                 }
-
             });
 
             return true;
         } catch (Exception ex) {
-            // Handle the error
+            Log.d("", "Error Uploading file. " + ex.getLocalizedMessage());
         }
         return false;
     }
@@ -131,16 +127,7 @@ public class Client {
             Response response = mClient.newCall(request).execute();
             String mimeType = response.header("Content-Type", "text/plain");
 
-            String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
-
-            if (fileExt == null) {
-                if (mimeType.startsWith("image"))
-                    fileExt = "jpg";
-                else if (mimeType.startsWith("video"))
-                    fileExt = "mp4";
-                else if (mimeType.startsWith("audio"))
-                    fileExt = "m4a";
-            }
+            String fileExt = getFileExtension(mimeType);
 
             String title  = new Date().getTime() + "." + fileExt;
 
@@ -159,6 +146,20 @@ public class Client {
         return fileOut;
     }
 
+    private String getFileExtension(String mimeType) {
+        String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType);
+
+        if (fileExt == null) {
+            if (mimeType.startsWith("image"))
+                fileExt = "jpg";
+            else if (mimeType.startsWith("video"))
+                fileExt = "mp4";
+            else if (mimeType.startsWith("audio"))
+                fileExt = "m4a";
+        }
+
+        return fileExt;
+    }
 
     private String buildUrl(String url, String path) {
         StringBuilder sbUrl = new StringBuilder();
