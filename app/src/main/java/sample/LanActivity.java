@@ -24,6 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -96,6 +97,11 @@ public class LanActivity extends AppCompatActivity {
             public void transferProgress(Neighbor neighbor, File fileMedia, String title,
                                          String mimeType, long transferred, long total) {
 
+            }
+
+            @Override
+            public void serviceRegistered(String serviceName) {
+                Toast.makeText(LanActivity.this, "Successfully registered service: " + serviceName, Toast.LENGTH_SHORT).show();
             }
         }, null);
 
