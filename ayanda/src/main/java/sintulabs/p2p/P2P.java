@@ -14,13 +14,6 @@ public abstract class P2P {
     public abstract void announce();
     /* Discover a nearby Peer*/
     public abstract void discover();
-    
-    // Disconnect from a peer
-    public abstract void disconnect();
-    // Send file to peer
-    public abstract void send();
-    // Cancel file transfer in progress
-    public abstract void cancel();
 
     /* If connection method is supported */
     public abstract Boolean isSupported();

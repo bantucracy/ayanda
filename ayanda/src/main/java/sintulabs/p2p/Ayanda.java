@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -126,8 +127,31 @@ public class Ayanda {
     }
 
     /* Wifi Direct Methods */
-    /*
-        Discover nearby WiFi Direct enabled devices
+
+    /**
+     *
+     * @param device to send data to
+     * @param bytes array of data to send
+     */
+    public void wdSendData(WifiP2pDevice device, byte[] bytes) {
+        wd.sendData(device, bytes);
+    }
+
+    public void wdShareFile (NearbyMedia media) throws IOException {
+        wd.shareFile(media);
+    }
+
+
+    /**
+     * Connect to a WifiDirect device
+     * @param device
+     */
+    public void wdConnect(WifiP2pDevice device) {
+        wd.connect(device);
+    }
+
+    /**
+     * Discover nearby WiFi Direct enabled devices
      */
     public void wdDiscover() {
         wd.discover();
@@ -143,5 +167,21 @@ public class Ayanda {
 
     public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
         return wd.getDevicesDiscovered();
+    }
+
+    /**
+     *  Add a user defined Server class to respond to client calls
+     * @param server A descendant of the server class
+     */
+    public void addServer(Server server) {
+        Server.setInstance(server);
+    }
+
+    /**
+     * Add a user defined Client class. This is used to make calls to the server
+     * @param client
+     */
+    public void addClient(Client client) {
+        Client.setInstance(client, context);
     }
 }
