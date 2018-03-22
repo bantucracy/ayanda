@@ -202,14 +202,14 @@ public class WifiDirect extends P2P {
      */
     private void createServer() {
         if (server == null) {
-            try {
+            /*try {
                 // TODO: PASS IN NanoHttp user defined server
-                server = Server.getInstance(serverPort);
+                server = Server.getInstance(serverPort, listener);
                 server.setFileToShare(fileToShare);
                 iWifiDirect.onConnectedAsServer(server);
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            } */
         }
     }
 
@@ -309,9 +309,11 @@ public class WifiDirect extends P2P {
     public void shareFile(NearbyMedia file) {
         setFileToShare(file);
         discover();
+        /*
         if (server != null) {
             server.setFileToShare(file);
-        }
+        }*/
+
     }
     /**
      * Android 8.0+ requires location to be turned on when discovering

@@ -6,6 +6,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,9 +33,15 @@ public class Ayanda {
      */
     public Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
         this.context = context;
-        bt = new Bluetooth(context, iBluetooth);
-        lan = new Lan(context, iLan);
-        wd = new WifiDirect(context, iWifiDirect);
+        if (iBluetooth != null) {
+            bt = new Bluetooth(context, iBluetooth);
+        }
+        if (iLan != null) {
+            lan = new Lan(context, iLan);
+        }
+        if (iWifiDirect != null) {
+            wd = new WifiDirect(context, iWifiDirect);
+        }
     }
 
     /**
@@ -173,8 +180,10 @@ public class Ayanda {
      *  Add a user defined Server class to respond to client calls
      * @param server A descendant of the server class
      */
-    public void addServer(Server server) {
-        Server.setInstance(server);
+    public void addServer(IServer server) {
+        Server.createInstance(server);
+        lan.setLocalPort(server.getPort());
+        //Server.setInstance(server);
     }
 
     /**
@@ -183,5 +192,14 @@ public class Ayanda {
      */
     public void addClient(Client client) {
         Client.setInstance(client, context);
+    }
+
+    public static int findOpenSocket() throws java.io.IOException {
+        // Initialize a server socket on the next available port.
+        ServerSocket serverSocket = new ServerSocket(0);
+        // Store the chosen port.
+        int port = serverSocket.getLocalPort();
+        serverSocket.close();
+        return port;
     }
 }
