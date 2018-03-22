@@ -93,6 +93,9 @@ public class Lan extends P2P {
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
         try {
             localPort = findOpenSocket();
+            if (webServer == null) {
+                webServer = new WebServer(localPort);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -298,14 +301,9 @@ public class Lan extends P2P {
      * Helper method to start discovery
      */
     private void startDiscovery() {
-        if (!isDiscovering) {
-            mNsdManager.discoverServices(
-                    SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
-            isDiscovering = true;
-        } else {
-            Log.d(TAG_DEBUG, "Service discovery has already been started");
-        }
-
+        mNsdManager.discoverServices(
+                SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+        isDiscovering = true;
     }
 
     public void stopDiscovery() {
@@ -453,9 +451,7 @@ public class Lan extends P2P {
     /* Share file with nearby devices */
     public void shareFile(NearbyMedia media) throws IOException {
         this.fileToShare = media;
-        if (webServer == null) {
-            webServer = new WebServer(localPort);
-        }
+
         announce();
     }
 
