@@ -105,7 +105,7 @@ public class LanActivity extends AppCompatActivity {
 
        verifyStoragePermissions(this);
         try {
-            a.addServer(new MyServer(this, Ayanda.findOpenSocket()));
+            a.setServer(new MyServer(this, Ayanda.findOpenSocket()));
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -17,10 +17,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
@@ -41,7 +38,6 @@ public class WifiDirect extends P2P {
     private ArrayList <WifiP2pDevice> peers = new ArrayList();
     private IWifiDirect iWifiDirect;
 
-    private Server server;
     private Client client;
     private NearbyMedia fileToShare;
 
@@ -61,10 +57,11 @@ public class WifiDirect extends P2P {
         // IntentFilter for receiver
         createIntent();
         createReceiver();
-        // create/start server ahead of time in case this device becomes a server (groupOwner)
-        //createServer();
     }
 
+    public void setServerport(int port) {
+        this.serverPort = port;
+    }
     /**
      * Create intents for default WiFi direct actions
      */
@@ -194,23 +191,7 @@ public class WifiDirect extends P2P {
      * This device connected as a group owner (server).
      */
     private void onConnectedAsServer() {
-        createServer();
-    }
-
-    /**
-     * Start server
-     */
-    private void createServer() {
-        if (server == null) {
-            /*try {
-                // TODO: PASS IN NanoHttp user defined server
-                server = Server.getInstance(serverPort, listener);
-                server.setFileToShare(fileToShare);
-                iWifiDirect.onConnectedAsServer(server);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } */
-        }
+        iWifiDirect.onConnectedAsServer(Server.server);
     }
 
     /**
@@ -309,11 +290,6 @@ public class WifiDirect extends P2P {
     public void shareFile(NearbyMedia file) {
         setFileToShare(file);
         discover();
-        /*
-        if (server != null) {
-            server.setFileToShare(file);
-        }*/
-
     }
     /**
      * Android 8.0+ requires location to be turned on when discovering

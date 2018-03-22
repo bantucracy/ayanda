@@ -94,15 +94,6 @@ public class Lan extends P2P {
         // Create the NsdServiceInfo object, and populate it.
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
         if (Server.server == null) {
-            /*
-            try {
-                localPort = findOpenSocket();
-                if (webServer == null) {
-                    webServer = new WebServer(localPort);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } */
             msg = "No Server implementation found";
             Log.d(TAG_DEBUG, msg);
         } else {

@@ -21,7 +21,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,10 +36,8 @@ import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.Client;
 import sintulabs.p2p.IWifiDirect;
-import sintulabs.p2p.Lan;
 import sintulabs.p2p.NearbyMedia;
 import sintulabs.p2p.Server;
-import sintulabs.p2p.WifiDirect;
 
 /**
  * Created by sabzo on 1/18/18.
@@ -134,10 +131,12 @@ public class WifiDirectActivity extends AppCompatActivity {
 
             }
         });
-    }
-
-    private void get(String url) {
-
+        try {
+            int defualtPort = 8080;
+            a.setServer(new MyServer(this, defualtPort));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createView() {

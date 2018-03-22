@@ -180,10 +180,11 @@ public class Ayanda {
      *  Add a user defined Server class to respond to client calls
      * @param server A descendant of the server class
      */
-    public void addServer(IServer server) {
+    public void setServer(IServer server) {
         Server.createInstance(server);
-        lan.setLocalPort(server.getPort());
-        //Server.setInstance(server);
+        if (lan != null) {
+            lan.setLocalPort(server.getPort());
+        }
     }
 
     /**
