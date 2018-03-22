@@ -2,10 +2,12 @@ package sintulabs.p2p;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -129,7 +131,7 @@ public class Ayanda {
     public void lanStopDiscovery() {
         lan.stopDiscovery();
     }
-    public List<Lan.Device> lanGetDeviceList() {
+    public List<Device> lanGetDeviceList() {
       return lan.getDeviceList();
     }
 
@@ -191,8 +193,8 @@ public class Ayanda {
      * Add a user defined Client class. This is used to make calls to the server
      * @param client
      */
-    public void addClient(Client client) {
-        Client.setInstance(client, context);
+    public void setClient(IClient client) {
+        Client.createInstance(client);
     }
 
     public static int findOpenSocket() throws java.io.IOException {
@@ -202,5 +204,33 @@ public class Ayanda {
         int port = serverSocket.getLocalPort();
         serverSocket.close();
         return port;
+    }
+
+    public static class Device {
+        private InetAddress host;
+        private Integer port;
+        NsdServiceInfo serviceInfo;
+
+        public Device() {
+
+        }
+        public Device(NsdServiceInfo serviceInfo) {
+            this.port = serviceInfo.getPort();
+            this.host = serviceInfo.getHost();
+            this.serviceInfo = serviceInfo;
+        }
+
+        public InetAddress getHost() {
+            return host;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
+
+        public String getName() {
+            return serviceInfo.getServiceName();
+        }
+
     }
 }

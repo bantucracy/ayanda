@@ -17,6 +17,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
@@ -38,7 +39,6 @@ public class WifiDirect extends P2P {
     private ArrayList <WifiP2pDevice> peers = new ArrayList();
     private IWifiDirect iWifiDirect;
 
-    private Client client;
     private NearbyMedia fileToShare;
 
     private int  serverPort = 8080;
@@ -198,10 +198,7 @@ public class WifiDirect extends P2P {
      * This device connected as a client
      */
     private void onConnectedAsClient() {
-        if (client == null) {
-            client = Client.getInstance(context);
-            iWifiDirect.onConnectedAsClient(client, groupOwnerAddress);
-        }
+        iWifiDirect.onConnectedAsClient(groupOwnerAddress);
     }
 
     public void wifiP2pThisDeviceChangedAction(Intent intent) {
@@ -269,7 +266,7 @@ public class WifiDirect extends P2P {
         });
     }
 
-    /**
+    /**f
      * Should be called when a connection has already been made to WifiP2pDevice
      * @param device
      * @param bytes
@@ -288,7 +285,11 @@ public class WifiDirect extends P2P {
     }
 
     public void shareFile(NearbyMedia file) {
-        setFileToShare(file);
+        try {
+            Server.getInstance().setFileToShare(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         discover();
     }
     /**

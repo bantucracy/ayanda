@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -81,7 +82,7 @@ public class LanActivity extends AppCompatActivity {
 
                 peers.addAll(a.lanGetDeviceList());
                 for (int i = 0; i < peers.size(); i++) {
-                    Lan.Device d = (Lan.Device) peers.get(i);
+                    Ayanda.Device d = (Ayanda.Device) peers.get(i);
                     peersAdapter.add(d.getName());
                 }
             }
@@ -100,6 +101,13 @@ public class LanActivity extends AppCompatActivity {
             @Override
             public void serviceRegistered(String serviceName) {
                 Toast.makeText(LanActivity.this, "Successfully registered service: " + serviceName, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void serviceResolved(NsdServiceInfo serviceInfo) {
+                // Connected to desired service, so now make socket connection to peer
+                MyClient client;
+
             }
         }, null);
 

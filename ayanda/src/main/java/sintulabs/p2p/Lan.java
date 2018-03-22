@@ -58,7 +58,7 @@ public class Lan extends P2P {
     private Boolean serviceAnnounced;
     private Boolean isDiscovering = false;
 
-    private List<Device> deviceList;
+    private List<Ayanda.Device> deviceList;
 
     private Set<String> servicesDiscovered;
 
@@ -201,11 +201,11 @@ public class Lan extends P2P {
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
-                            Device d = new Device(serviceInfo);
+                            Ayanda.Device d = new Ayanda.Device(serviceInfo);
                             addDeviceToList(d);
-                            connect(d);
-
+                            //connect(d);
                             updateDeviceList();
+                            iLan.serviceResolved(serviceInfo);
                             Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
                         /* FYI; ServiceType within listener doesn't have a period at the end.
                          outside the listener it does */
@@ -222,7 +222,7 @@ public class Lan extends P2P {
                 // When the network service is no longer available.
                 // remove service from list
                 Log.e(TAG_DEBUG, "service lost" + service);
-                removeDeviceFromList(new Device(service));
+                removeDeviceFromList(new Ayanda.Device(service));
                 servicesDiscovered.remove(service.getServiceName());
                 updateDeviceList();
             }
@@ -264,11 +264,11 @@ public class Lan extends P2P {
 
     }
 
-    private void addDeviceToList(Device device) {
+    private void addDeviceToList(Ayanda.Device device) {
         deviceList.add(device);
     }
 
-    private void removeDeviceFromList(Device device) {
+    private void removeDeviceFromList(Ayanda.Device device) {
         int pos = -1; // pos of device to remove
         String deviceName = device.getName();
         String match;
@@ -311,7 +311,7 @@ public class Lan extends P2P {
     }
 
     /* Connect via HTTP & Download the File */
-    public void connect(Device device) {
+    public void connect(Ayanda.Device device) {
         // Build URL to connect to
 
         OkHttpClient client = new OkHttpClient();
@@ -358,7 +358,7 @@ public class Lan extends P2P {
     }
 
     /* Create a String representing the host and port of a device on LAN */
-    private StringBuilder buildURLFromDevice(Device device) {
+    private StringBuilder buildURLFromDevice(Ayanda.Device device) {
         StringBuilder sbUrl = new StringBuilder();
         sbUrl.append("http://");
         sbUrl.append(device.getHost().getHostName());
@@ -407,33 +407,8 @@ public class Lan extends P2P {
     }
 
 
-    public List<Device> getDeviceList() {
+    public List<Ayanda.Device> getDeviceList() {
         return deviceList;
-    }
-
-    public static class Device {
-        private InetAddress host;
-        private Integer port;
-        NsdServiceInfo serviceInfo;
-
-        public Device(NsdServiceInfo serviceInfo) {
-            this.port = serviceInfo.getPort();
-            this.host = serviceInfo.getHost();
-            this.serviceInfo = serviceInfo;
-        }
-
-        public InetAddress getHost() {
-            return host;
-        }
-
-        public Integer getPort() {
-            return port;
-        }
-
-        public String getName() {
-            return serviceInfo.getServiceName();
-        }
-
     }
 
     /* Share file with nearby devices */

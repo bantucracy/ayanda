@@ -26,8 +26,8 @@ import sintulabs.p2p.NearbyMedia;
 
 public class MyServer extends NanoHTTPD implements IServer{
 
-    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
-    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
+    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/ayanda/file";
+    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/ayanda/meta";
     public final static String SERVICE_UPLOAD_FILE_PATH = "/ayanda/upload";
 
     private NearbyMedia fileToShare;
@@ -45,7 +45,16 @@ public class MyServer extends NanoHTTPD implements IServer{
     @Override
     public Response serve(IHTTPSession session) {
         if (session.getUri().endsWith(SERVICE_UPLOAD_FILE_PATH)) {
-            return uploadFile(session);
+            Response response = uploadFile(session);
+            if (response != null) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "File received", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+            return response;
         } else if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH)) {
             try {
 

@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -95,11 +96,11 @@ public class WifiDirectActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onConnectedAsClient(final Client client, final InetAddress groupOwnerAddress) {
+            public void onConnectedAsClient(final InetAddress groupOwnerAddress) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        /*
+                        MyClient client = new MyClient(WifiDirectActivity.this);
                         try {
 
                                 final String response = client
@@ -121,9 +122,10 @@ public class WifiDirectActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        */
+
 
                         if (nearbyMedia != null) {
+
                            client.uploadFile(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080), nearbyMedia);
                         }
                     }
@@ -198,7 +200,7 @@ public class WifiDirectActivity extends AppCompatActivity {
 
                 nearbyMedia.setFileMedia(new File(filePath));
 
-                //get a JSON representation of the metadata we want to share
+                //get a JSON reprecation of the metadata we want to share
                 Gson gson = new GsonBuilder()
                         .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
                 nearbyMedia.mMetadataJson = gson.toJson("key:value");
