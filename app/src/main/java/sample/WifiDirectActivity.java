@@ -37,10 +37,8 @@ import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.Client;
 import sintulabs.p2p.IWifiDirect;
-import sintulabs.p2p.Lan;
 import sintulabs.p2p.NearbyMedia;
 import sintulabs.p2p.Server;
-import sintulabs.p2p.WifiDirect;
 
 /**
  * Created by sabzo on 1/18/18.
@@ -98,11 +96,11 @@ public class WifiDirectActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onConnectedAsClient(final Client client, final InetAddress groupOwnerAddress) {
+            public void onConnectedAsClient(final InetAddress groupOwnerAddress) {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        /*
+                        MyClient client = new MyClient(WifiDirectActivity.this);
                         try {
 
                                 final String response = client
@@ -124,9 +122,10 @@ public class WifiDirectActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        */
+
 
                         if (nearbyMedia != null) {
+
                            client.uploadFile(groupOwnerAddress.getHostAddress() + ":" + Integer.toString(8080), nearbyMedia);
                         }
                     }
@@ -134,10 +133,12 @@ public class WifiDirectActivity extends AppCompatActivity {
 
             }
         });
-    }
-
-    private void get(String url) {
-
+        try {
+            int defualtPort = 8080;
+            a.setServer(new MyServer(this, defualtPort));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createView() {
@@ -199,7 +200,7 @@ public class WifiDirectActivity extends AppCompatActivity {
 
                 nearbyMedia.setFileMedia(new File(filePath));
 
-                //get a JSON representation of the metadata we want to share
+                //get a JSON reprecation of the metadata we want to share
                 Gson gson = new GsonBuilder()
                         .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
                 nearbyMedia.mMetadataJson = gson.toJson("key:value");

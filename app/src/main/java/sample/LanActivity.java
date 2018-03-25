@@ -2,19 +2,15 @@ package sample;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -68,7 +64,10 @@ public class LanActivity extends AppCompatActivity {
     // image
     private ImageView ivPreview;
     // LAN
+
     private Ayanda a;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,7 +82,7 @@ public class LanActivity extends AppCompatActivity {
 
                 peers.addAll(a.lanGetDeviceList());
                 for (int i = 0; i < peers.size(); i++) {
-                    Lan.Device d = (Lan.Device) peers.get(i);
+                    Ayanda.Device d = (Ayanda.Device) peers.get(i);
                     peersAdapter.add(d.getName());
                 }
             }
@@ -103,9 +102,21 @@ public class LanActivity extends AppCompatActivity {
             public void serviceRegistered(String serviceName) {
                 Toast.makeText(LanActivity.this, "Successfully registered service: " + serviceName, Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void serviceResolved(NsdServiceInfo serviceInfo) {
+                // Connected to desired service, so now make socket connection to peer
+                MyClient client;
+
+            }
         }, null);
 
        verifyStoragePermissions(this);
+        try {
+            a.setServer(new MyServer(this, Ayanda.findOpenSocket()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -159,6 +170,7 @@ public class LanActivity extends AppCompatActivity {
 
         btnLanAnnounce.setOnClickListener(btnClick);
         btnLanDiscover.setOnClickListener(btnClick);
+
     }
 
     @Override
@@ -228,7 +240,6 @@ public class LanActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
