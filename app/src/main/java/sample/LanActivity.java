@@ -9,6 +9,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -65,6 +67,7 @@ public class LanActivity extends AppCompatActivity {
     private ImageView ivPreview;
     // LAN
 
+    NearbyMedia nearbyMedia;
     private Ayanda a;
 
 
@@ -106,7 +109,41 @@ public class LanActivity extends AppCompatActivity {
             @Override
             public void serviceResolved(NsdServiceInfo serviceInfo) {
                 // Connected to desired service, so now make socket connection to peer
-                MyClient client;
+                final Ayanda.Device device = new Ayanda.Device(serviceInfo);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        MyClient client = new MyClient(LanActivity.this);
+                        String host = device.getHost().toString();
+                        try {
+
+                            final String response = client
+                                    .get(host + ":" + Integer.toString(8080));
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(LanActivity.this, response, Toast.LENGTH_LONG).show();
+                                }
+                            });
+
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            final File file = client.getFile(host + ":" + Integer.toString(8080));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        if (nearbyMedia != null) {
+
+                            client.uploadFile(host + ":" + Integer.toString(8080), nearbyMedia);
+                        }
+                    }
+                }).start();
 
             }
         }, null);
@@ -225,7 +262,7 @@ public class LanActivity extends AppCompatActivity {
 
             String filePath = getRealPathFromURI(photoUri);
 
-            NearbyMedia nearbyMedia = new NearbyMedia();
+            nearbyMedia = new NearbyMedia();
             nearbyMedia.setMimeType("image/jpeg");
             nearbyMedia.setTitle("pic");
 
