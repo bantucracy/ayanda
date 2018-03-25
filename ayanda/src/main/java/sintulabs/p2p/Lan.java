@@ -203,7 +203,6 @@ public class Lan extends P2P {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
                             Ayanda.Device d = new Ayanda.Device(serviceInfo);
                             addDeviceToList(d);
-                            //connect(d);
                             updateDeviceList();
                             iLan.serviceResolved(serviceInfo);
                             Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
@@ -307,53 +306,6 @@ public class Lan extends P2P {
         if (mRegistrationListener != null) {
             mNsdManager.unregisterService(mRegistrationListener);
             mRegistrationListener = null;
-        }
-    }
-
-    /* Connect via HTTP & Download the File */
-    public void connect(Ayanda.Device device) {
-        // Build URL to connect to
-
-        OkHttpClient client = new OkHttpClient();
-        StringBuilder sbUrl = buildURLFromDevice(device).append(SERVICE_DOWNLOAD_FILE_PATH);
-        Request request = buildRequest(sbUrl);
-        try {
-            Response response = client.newCall(request).execute();
-
-            // Create Media Object
-            NearbyMedia media = new NearbyMedia();
-            media.mMimeType = response.header("Content-Type", "text/plain");
-            media.mTitle = new Date().getTime() + "";
-            setFileExtension(media);
-            // Create File to store Media in
-            File fileOut = createFile(media.mTitle);
-            media.mFileMedia = fileOut;
-
-            Neighbor neighbor = new Neighbor(device.getHost().getHostAddress(),
-                    device.getHost().getHostName(), Neighbor.TYPE_WIFI_NSD);
-
-            iLan.transferProgress(neighbor, fileOut, media.mTitle, media.mMimeType, 50,
-                    Long.parseLong(response.header("Content-Length", "0")));
-
-
-            BufferedSink sink = Okio.buffer(Okio.sink(fileOut));
-            sink.writeAll(response.body().source());
-            sink.close();
-
-            //now get the metadata
-            sbUrl = buildURLFromDevice(device).append(SERVICE_DOWNLOAD_METADATA_PATH);
-            request = buildRequest(sbUrl);
-            response = client.newCall(request).execute();
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            sink = Okio.buffer(Okio.sink(baos));
-            sink.writeAll(response.body().source());
-            sink.close();
-
-            media.mMetadataJson = new String(baos.toByteArray());
-
-        } catch (IOException e) {
-            Log.e(TAG_DEBUG, "Unable to connect to url: " + sbUrl.toString() + " ", e);
         }
     }
 
