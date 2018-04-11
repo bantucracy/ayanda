@@ -236,14 +236,14 @@ public class Lan extends P2P {
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
                 isDiscovering = false;
                 Log.e(TAG_DEBUG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
+                //mNsdManager.stopServiceDiscovery(this);
             }
 
             @Override
             public void onStopDiscoveryFailed(String serviceType, int errorCode) {
                 isDiscovering = false;
                 Log.e(TAG_DEBUG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
+              //  mNsdManager.stopServiceDiscovery(this);
             }
         };
 
