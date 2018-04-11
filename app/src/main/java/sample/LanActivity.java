@@ -266,7 +266,7 @@ public class LanActivity extends AppCompatActivity {
             nearbyMedia.setMimeType("image/jpeg");
             nearbyMedia.setTitle("pic");
 
-            nearbyMedia.setFileMedia(new File(filePath));
+        //    nearbyMedia.setFileMedia(new File(filePath));
 
             //get a JSON representation of the metadata we want to share
             Gson gson = new GsonBuilder()
