@@ -15,4 +15,6 @@ public interface IWifiDirect {
     void wifiP2pThisDeviceChangedAction(Intent intent);
     void onConnectedAsServer(Server server);
     void onConnectedAsClient(InetAddress groupOwnerAddress);
+
+    public String getPublicName ();
 }

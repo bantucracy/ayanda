@@ -63,6 +63,14 @@ public class WifiDirectActivity extends AppCompatActivity {
         createView();
         setListeners();
         a = new Ayanda(this, null, null, new IWifiDirect() {
+
+
+            public String getPublicName ()
+            {
+                return "Ayanda WifiP2P Device";
+            }
+
+
             @Override
             public void wifiP2pStateChangedAction(Intent intent) {
 
@@ -198,7 +206,7 @@ public class WifiDirectActivity extends AppCompatActivity {
                 nearbyMedia.setMimeType("image/jpeg");
                 nearbyMedia.setTitle("pic");
 
-                nearbyMedia.setFileMedia(new File(filePath));
+              //  nearbyMedia.setFileMedia(new File(filePath));
 
                 //get a JSON reprecation of the metadata we want to share
                 Gson gson = new GsonBuilder()

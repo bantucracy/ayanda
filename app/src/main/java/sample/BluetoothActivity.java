@@ -49,6 +49,13 @@ public class BluetoothActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         a = new Ayanda(this, new IBluetooth() {
+
+
+            public String getPublicName ()
+            {
+                return "Ayanda Bluetooth Device";
+            }
+
             @Override
             public void actionDiscoveryStarted(Intent intent) {
 

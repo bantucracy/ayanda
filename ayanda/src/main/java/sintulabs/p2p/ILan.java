@@ -16,4 +16,6 @@ public interface ILan {
                                   long transferred, long total);
     public void serviceRegistered(String serviceName);
     public void serviceResolved(NsdServiceInfo serviceInfo);
+
+    public String getPublicName ();
 }

@@ -38,8 +38,10 @@ import java.util.Set;
 
 public class Lan extends P2P {
     // constants for identifying service and service type
-    public final static String SERVICE_NAME_DEFAULT = "NSDaya";
+
     public final static String SERVICE_TYPE = "_http._tcp.";
+    public final static String SERVICE_NAME_BASE = "Ayanda.";
+
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
     public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
@@ -99,7 +101,7 @@ public class Lan extends P2P {
         } else {
             // The name is   subject to change based on conflicts
             // with other services advertised on the same network.
-            serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
+            serviceInfo.setServiceName(SERVICE_NAME_BASE + iLan.getPublicName());
             serviceInfo.setServiceType(SERVICE_TYPE);
             serviceInfo.setPort(localPort);
 
@@ -111,7 +113,7 @@ public class Lan extends P2P {
             if (!serviceAnnounced) {
                 mNsdManager.registerService(
                         serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-                msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
+                msg = "Announcing on LAN: " + iLan.getPublicName() + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
             } else {
                 msg = "Service already announced";
             }
@@ -188,7 +190,7 @@ public class Lan extends P2P {
                 }
                 // Make sure service is the expect type and name
                 else if (service.getServiceType().equals(SERVICE_TYPE) &&
-                        service.getServiceName().contains(SERVICE_NAME_DEFAULT)) {
+                        service.getServiceName().contains(SERVICE_NAME_BASE)) {
 
                     mNsdManager.resolveService(service, new NsdManager.ResolveListener() {
 

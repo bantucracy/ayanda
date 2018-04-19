@@ -77,6 +77,12 @@ public class LanActivity extends AppCompatActivity {
         createView();
         setListeners();
         a = new Ayanda(this, null, new ILan() {
+
+            public String getPublicName ()
+            {
+                return "Ayanda LAN Device";
+            }
+
             @Override
             public void deviceListChanged() {
                 peers.clear();
