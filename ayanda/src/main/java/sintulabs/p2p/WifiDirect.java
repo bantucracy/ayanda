@@ -18,6 +18,7 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
@@ -36,18 +37,19 @@ public class WifiDirect extends P2P {
     private Boolean wiFiP2pEnabled = false;
     private Boolean isGroupOwner = false;
     private InetAddress groupOwnerAddress;
-    private ArrayList <WifiP2pDevice> peers = new ArrayList();
+    private ArrayList<WifiP2pDevice> peers = new ArrayList();
     private IWifiDirect iWifiDirect;
 
     private NearbyMedia fileToShare;
 
-    private int  serverPort = 8080;
+    private int serverPort = 8080;
     private Boolean isClient = false;
     private Boolean isServer = false;
 
     /**
      * Creates a WifiDirect instance
-     * @param context activity/application contex
+     *
+     * @param context     activity/application contex
      * @param iWifiDirect an inteface to provide callbacks to WiFi Direct events
      */
     public WifiDirect(Context context, IWifiDirect iWifiDirect) {
@@ -62,6 +64,7 @@ public class WifiDirect extends P2P {
     public void setServerport(int port) {
         this.serverPort = port;
     }
+
     /**
      * Create intents for default WiFi direct actions
      */
@@ -74,7 +77,7 @@ public class WifiDirect extends P2P {
     }
 
     /**
-     *  Create WifiP2pManager and Channel
+     * Create WifiP2pManager and Channel
      */
     private void initializeWifiDirect() {
         wifiP2pManager = (WifiP2pManager) context.getSystemService(context.WIFI_P2P_SERVICE);
@@ -85,6 +88,32 @@ public class WifiDirect extends P2P {
                 initializeWifiDirect();
             }
         });
+
+        setDeviceName(SERVICE_NAME_BASE + iWifiDirect.getPublicName(),wifiP2pManager,wifiDirectChannel);
+
+    }
+
+    private void setDeviceName(String new_name, WifiP2pManager manager, WifiP2pManager.Channel channel)
+    {
+        try {
+            Method m = manager.getClass().getMethod(
+                    "setDeviceName",
+                    new Class[] { WifiP2pManager.Channel.class, String.class,
+                            WifiP2pManager.ActionListener.class });
+
+            m.invoke(manager, channel, new_name, new WifiP2pManager.ActionListener() {
+                public void onSuccess() {
+                    //Code for Success in changing name
+                }
+
+                public void onFailure(int reason) {
+                    //Code to be done while name change Fails
+                }
+            });
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
     }
 
     /**

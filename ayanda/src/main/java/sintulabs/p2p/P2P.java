@@ -10,6 +10,8 @@ public abstract class P2P {
     protected final short BLUETOOTH = 1;
     protected final  String TAG_DEBUG = "ayanda_bug";
 
+    public final static String SERVICE_NAME_BASE = "Ayanda.";
+
     /* announce the p2p service */
     public abstract void announce();
     /* Discover a nearby Peer*/

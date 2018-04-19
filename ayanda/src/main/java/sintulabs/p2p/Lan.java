@@ -40,7 +40,6 @@ public class Lan extends P2P {
     // constants for identifying service and service type
 
     public final static String SERVICE_TYPE = "_http._tcp.";
-    public final static String SERVICE_NAME_BASE = "Ayanda.";
 
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
