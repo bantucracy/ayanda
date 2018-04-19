@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +59,8 @@ public class MyServer extends NanoHTTPD implements IServer{
         } else if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH)) {
             try {
 
-                Response response = NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.getFileMedia()));
+                InputStream is = context.getContentResolver().openInputStream(fileToShare.getMediaUri());
+                Response response = NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, is);
                 if (response != null) {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
