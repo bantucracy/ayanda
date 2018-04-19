@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED;
@@ -37,7 +38,7 @@ public class WifiDirect extends P2P {
     private Boolean wiFiP2pEnabled = false;
     private Boolean isGroupOwner = false;
     private InetAddress groupOwnerAddress;
-    private ArrayList<WifiP2pDevice> peers = new ArrayList();
+    private HashMap<String, WifiP2pDevice> peers = new HashMap<>();
     private IWifiDirect iWifiDirect;
 
     private NearbyMedia fileToShare;
@@ -172,7 +173,10 @@ public class WifiDirect extends P2P {
                 @Override
                 public void onPeersAvailable(WifiP2pDeviceList peerList) {
                     peers.clear();
-                    peers.addAll(peerList.getDeviceList());
+
+                    for (WifiP2pDevice p2pdevice: peerList.getDeviceList()) {
+                        peers.put(p2pdevice.deviceName,p2pdevice);
+                    }
                 }
             });
         }
@@ -269,8 +273,43 @@ public class WifiDirect extends P2P {
      is complete
      * @return Arraylist <WifiP2pDevice>
      */
-    public ArrayList<WifiP2pDevice> getDevicesDiscovered() {
-        return peers;
+    public ArrayList<Ayanda.Device> getDevicesDiscovered() {
+
+        ArrayList<Ayanda.Device> alDevices = new ArrayList<>();
+
+        for (WifiP2pDevice p2pDevice : peers.values())
+        {
+            Ayanda.Device aDevice = new Ayanda.Device(p2pDevice);
+            alDevices.add(aDevice);
+        }
+
+        return alDevices;
+    }
+
+    /**
+     * Connect to a nearby device
+     * @param aDevice
+     */
+    public void connect(Ayanda.Device aDevice) {
+
+        WifiP2pDevice device = peers.get(aDevice.getName());
+        if (device != null) {
+            WifiP2pConfig config = new WifiP2pConfig();
+            config.deviceAddress = device.deviceAddress;
+            config.wps.setup = WpsInfo.PBC;
+
+            wifiP2pManager.connect(wifiDirectChannel, config, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    // WiFiDirectBroadcastReceiver notifies us. Ignore for now.
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    // todo if failure == 2
+                }
+            });
+        }
     }
 
     /**

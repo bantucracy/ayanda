@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -174,7 +175,7 @@ public class Ayanda {
         wd.unregisterReceivers();
     }
 
-    public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
+    public ArrayList<Ayanda.Device> wdGetDevicesDiscovered() {
         return wd.getDevicesDiscovered();
     }
 
@@ -211,13 +212,29 @@ public class Ayanda {
         private Integer port;
         NsdServiceInfo serviceInfo;
 
-        public Device() {
+        private String address;
+        private String name;
 
+        private int type = -1;
+        public final static int TYPE_WIFI_P2P = 1;
+        public final static int TYPE_WIFI_LAN = 2;
+        public final static int TYPE_BLUETOOTH = 3;
+
+        public Device(WifiP2pDevice device) {
+
+            this.name = device.deviceName;
+            this.address = device.deviceAddress;
+
+            type = TYPE_WIFI_P2P;
         }
+
         public Device(NsdServiceInfo serviceInfo) {
             this.port = serviceInfo.getPort();
             this.host = serviceInfo.getHost();
             this.serviceInfo = serviceInfo;
+            this.name = serviceInfo.getServiceName();
+
+            type = TYPE_WIFI_LAN;
         }
 
         public InetAddress getHost() {
@@ -229,7 +246,7 @@ public class Ayanda {
         }
 
         public String getName() {
-            return serviceInfo.getServiceName();
+            return name;
         }
 
     }
