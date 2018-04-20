@@ -160,6 +160,15 @@ public class Ayanda {
         wd.connect(device);
     }
 
+
+    /**
+     * Connect to a WifiDirect device
+     * @param device
+     */
+    public void wdConnect(Ayanda.Device device) {
+        wd.connect(device);
+    }
+
     /**
      * Discover nearby WiFi Direct enabled devices
      */
