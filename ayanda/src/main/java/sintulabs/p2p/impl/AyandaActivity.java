@@ -64,11 +64,11 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     private LinearLayout mViewNearbyDevices;
 
-    private NearbyMedia mNearbyMedia = null;
+    protected NearbyMedia mNearbyMedia = null;
 
     private Ayanda mAyanda;
     private AyandaServer mAyandaServer;
-    private HashMap<String,Ayanda.Device> mPeers = new HashMap();
+    private HashMap<String,Ayanda.Device> mPeers = new HashMap<String,Ayanda.Device>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,12 +163,12 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     public abstract void addMedia (final NearbyMedia nearbyMedia);
 
-    private void restartNearby() {
+    protected void restartNearby() {
         mAyanda.lanDiscover();
         //   mAyanda.btDiscover();
     }
 
-    private void cancelNearby() {
+    protected void cancelNearby() {
 
         if (mAyandaServer != null)
             mAyandaServer.stop();
