@@ -1,4 +1,4 @@
-package sample;
+package sample.custom;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -8,7 +8,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -35,7 +34,6 @@ import java.util.List;
 
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
-import sintulabs.p2p.Client;
 import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.NearbyMedia;
 import sintulabs.p2p.Server;

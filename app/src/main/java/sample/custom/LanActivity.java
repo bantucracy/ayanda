@@ -1,4 +1,4 @@
-package sample;
+package sample.custom;
 
 import android.Manifest;
 import android.app.Activity;
@@ -36,7 +36,6 @@ import java.util.List;
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.ILan;
-import sintulabs.p2p.Lan;
 import sintulabs.p2p.NearbyMedia;
 import sintulabs.p2p.Neighbor;
 import sintulabs.p2p.WifiDirect;

@@ -1,4 +1,4 @@
-package sample;
+package sample.custom;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;

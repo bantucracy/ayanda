@@ -12,17 +12,17 @@
 
 
         <activity
-            android:name="sample.LanActivity"
+            android:name="sample.custom.LanActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" >
 
         </activity>
-        <activity android:name="sample.BluetoothActivity" android:label="@string/app_name"
+        <activity android:name="sample.custom.BluetoothActivity" android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
 
         </activity>
         <activity
-            android:name="sample.WifiDirectActivity"
+            android:name="sample.custom.WifiDirectActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" >
 
