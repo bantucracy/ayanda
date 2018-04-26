@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD;
-import sintulabs.p2p.ILan;
 import sintulabs.p2p.IServer;
 import sintulabs.p2p.NearbyMedia;
 

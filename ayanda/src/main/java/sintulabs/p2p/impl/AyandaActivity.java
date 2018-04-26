@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -15,7 +16,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.MediaStore;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -78,7 +78,6 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_nearby);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mViewNearbyDevices = findViewById(R.id.nearbydevices);
 
@@ -104,16 +103,19 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
     private void startAyanda ()
     {
 
-        mAyanda = getAyandaInstance( null, mNearbyWifiLan, mNearbyWifiDirect);
+        mAyanda = getAyandaInstance( mNearbyBluetooth, mNearbyWifiLan, mNearbyWifiDirect);
         mAyanda.wdRegisterReceivers();
 
         mNearbyWifiDirect.wifiP2pPeersChangedAction();
         mNearbyWifiLan.deviceListChanged();
 
+        try {
+            initNearbyMedia();
+        }
+        catch (Exception e)
+        {}
 
-        boolean mIsServer = getIntent().getBooleanExtra("isServer", false);
-
-        if (mIsServer) {
+        if (mNearbyMedia != null) {
             try {
                 startServer();
             } catch (IOException e) {
@@ -121,7 +123,6 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
             }
 
         } else {
-            getSupportActionBar().setTitle(R.string.status_receiving);
 
         }
 
@@ -167,7 +168,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     protected void restartNearby() {
         mAyanda.lanDiscover();
-        //   mAyanda.btDiscover();
+        mAyanda.btDiscover();
     }
 
     protected void cancelNearby() {
@@ -190,6 +191,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         super.onResume();
         if (mAyanda != null) {
             mAyanda.wdRegisterReceivers();
+            mAyanda.btRegisterReceivers();
             restartNearby();
         }
     }
@@ -199,8 +201,10 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
     protected void onPause() {
         super.onPause();
 
-        if (mAyanda != null)
+        if (mAyanda != null) {
             mAyanda.wdUnregisterReceivers();
+            mAyanda.btUnregisterReceivers();
+        }
     }
 
     @Override
@@ -214,10 +218,6 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     private void startServer() throws IOException {
 
-        initNearbyMedia();
-
-        getSupportActionBar().setTitle("Sharing: " + mNearbyMedia.getTitle());
-
         try {
             int defaultPort = 8080;
             mAyandaServer = new AyandaServer(this, defaultPort);
@@ -225,8 +225,8 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
             mAyanda.wdShareFile(mNearbyMedia);
             mAyanda.lanShare(mNearbyMedia);
+            mAyanda.btAnnounce();
 
-            //    mAyanda.btAnnounce();
 
         } catch (IOException e) {
             Log.e(TAG,"error setting server and sharing file",e);
@@ -254,6 +254,8 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
     };
 
 
+    private HashMap<String,DonutProgress> mDeviceToProgress = new HashMap();
+
     private void refreshPeerViews () {
 
         ArrayList<View> views = new ArrayList<>();
@@ -273,8 +275,16 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                 LinearLayout.LayoutParams imParams2 =
                         new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-                DonutProgress donutProgress = new DonutProgress(this);
+                DonutProgress donutProgress = mDeviceToProgress.get(device.getName()+device.getHost());
+                if (donutProgress == null) {
+                    donutProgress = new DonutProgress(this);
+                    mDeviceToProgress.put(device.getName()+device.getHost(),donutProgress);
+                }
+
                 donutProgress.setLayoutParams(imParams2);
+                if (((LinearLayout)donutProgress.getParent()) != null)
+                     ((LinearLayout)donutProgress.getParent()).removeView(donutProgress);
+
                 layoutOuter.addView(donutProgress);
 
                 LinearLayout.LayoutParams imParams3 =
@@ -293,30 +303,42 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                 layoutOuter.addView(tv);
 
 
-                layoutOuter.setOnClickListener(new View.OnClickListener() {
-
-                    @Override
-                    public void onClick(View view) {
-                        if (device.getType() == Ayanda.Device.TYPE_WIFI_P2P)
-                            mAyanda.wdConnect(device);
-                        else if (device.getType() == Ayanda.Device.TYPE_WIFI_LAN)
-                            connectToDevice(device);
-
-                        Snackbar snackbar = Snackbar
-                                .make(findViewById(R.id.nearbydevices), R.string.status_connected, Snackbar.LENGTH_LONG);
-                        snackbar.show();
-                    }
-                });
+                layoutOuter.setOnClickListener(new DeviceOnClickListener(device,donutProgress));
 
                 views.add(layoutOuter);
             }
         }
 
+        if (views.size() > 0)
+            findViewById(R.id.txt_tap_info).setVisibility(View.VISIBLE);
+        else
+            findViewById(R.id.txt_tap_info).setVisibility(View.GONE);
+
         populateViews(mViewNearbyDevices, views.toArray(new View[views.size()]), this);
 
     }
 
+    class DeviceOnClickListener implements View.OnClickListener
+    {
+        private Ayanda.Device mDevice;
+        private DonutProgress mProgress;
 
+        public DeviceOnClickListener (Ayanda.Device device, DonutProgress progress) {
+            mDevice = device;
+            mProgress = progress;
+        }
+
+        @Override
+        public void onClick(View view) {
+
+            mProgress.setInnerBackgroundColor(Color.GREEN);
+
+            if (mDevice.getType() == Ayanda.Device.TYPE_WIFI_P2P)
+                mAyanda.wdConnect(mDevice);
+            else if (mDevice.getType() == Ayanda.Device.TYPE_WIFI_LAN)
+                connectToDevice(mDevice);
+        }
+    }
 
     ILan mNearbyWifiLan = new ILan() {
 
@@ -337,7 +359,8 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                         && (!device.getName().equals(getPublicName()))
                         && (!mPeers.containsKey(device.getHost().toString()))) {
 
-                    mPeers.put(device.getHost().toString(), device);
+
+                    mPeers.put(device.getName(), device);
                     addPeerToView(device);
                 }
             }
@@ -393,7 +416,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                 else
                     serverHost = dest4.getHostAddress() + ":" + device.getPort().intValue();
 
-                getNearbyMedia(serverHost);
+                getNearbyMedia(device,serverHost);
             }
 
         } catch (IOException e) {
@@ -402,7 +425,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         }
     }
 
-    private void getNearbyMedia (final String serverHost)
+    private void getNearbyMedia (final Ayanda.Device device, final String serverHost)
     {
         new Thread(new Runnable() {
             @Override public void run() {
@@ -425,6 +448,11 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                             @Override
                             public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
 
+                                if (device != null) {
+                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    if (progress != null)
+                                        progress.setProgress((int) (100 * percent));
+                                }
                             }
 
                             //if you don't need this method, don't override this methd. It isn't an abstract method, just an empty method.
@@ -432,6 +460,12 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                             public void onUIProgressFinish() {
                                 super.onUIProgressFinish();
                                 Log.d("TAG", "onUIProgressFinish:");
+
+                                if (device != null) {
+                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    if (progress != null)
+                                        progress.setProgress(100);
+                                }
                             }
 
                         });
@@ -452,6 +486,11 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                             @Override
                             public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
 
+                                if (device != null) {
+                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    if (progress != null)
+                                        progress.setProgress((int) (100 * percent));
+                                }
                             }
 
                             //if you don't need this method, don't override this methd. It isn't an abstract method, just an empty method.
@@ -460,6 +499,12 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                                 super.onUIProgressFinish();
                                 Log.d("TAG", "onUIProgressFinish:");
                                 //  Toast.makeText(getApplicationContext(), "结束上传", Toast.LENGTH_SHORT).show();
+
+                                if (device != null) {
+                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    if (progress != null)
+                                        progress.setProgress(100);
+                                }
                             }
 
                         }, new AyandaListener() {
@@ -482,98 +527,65 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     }
 
-    /**
      IBluetooth mNearbyBluetooth = new IBluetooth() {
 
-     private boolean mInTransfer = false;
-     private NearbyMedia mBtNearby = null;
+         private boolean mInTransfer = false;
+         private NearbyMedia mBtNearby = null;
 
-     @Override
-     public void actionDiscoveryStarted(Intent intent) {
+         @Override
+         public void actionDiscoveryStarted(Intent intent) {
 
-     }
+         }
 
-     @Override
-     public void actionDiscoveryFinished(Intent intent) {
+         @Override
+         public void actionDiscoveryFinished(Intent intent) {
 
-     }
+         }
 
-     @Override
-     public void stateChanged(Intent intent) {
+         @Override
+         public void stateChanged(Intent intent) {
 
-     }
+         }
 
-     @Override
-     public void scanModeChange(Intent intent) {
+         @Override
+         public void scanModeChange(Intent intent) {
 
-     }
+         }
 
-     @Override
-     public void actionFound(Intent intent) {
-
-     HashMap<String,BluetoothDevice> devices = new HashMap<>(mAyanda.btGetDevices());
-
-     for (BluetoothDevice device: devices.values())
-     {
-     if ((!TextUtils.isEmpty(device.getAddress()))
-     && (!mPeers.containsKey(device.getAddress()))) {
-
-     mPeers.put(device.getAddress(), device.getName());
-     addPeerToView("BT: " + device.getName());
-
-     }
-
-     mAyanda.btConnect(device);
-
-     }
-
-     }
-
-     @Override
-     public void dataRead(byte[] bytes, int length) {
-
-     if (!mInTransfer)
-     {
-     //must be the json
-     mInTransfer = true;
-
-     mBtNearby = new NearbyMedia();
-     mBtNearby.mMetadataJson = new String(bytes);
-
-     GsonBuilder gsonBuilder = new GsonBuilder();
-     gsonBuilder.registerTypeAdapter(Media.class, new MediaDeserializer());
-     gsonBuilder.setDateFormat(DateFormat.FULL, DateFormat.FULL);
-     Gson gson = gsonBuilder.create();
-     Media media = gson.fromJson(mBtNearby.mMetadataJson, Media.class);
-     }
-     else
-     {
-     //now read the file bytes
-     }
-
-     }
-
-     @Override
-     public void connected(BluetoothDevice device) {
-
-     try {
-     //first send opening info
-     mAyanda.btSendData(device, mNearbyMedia.mMetadataJson.getBytes());
-     } catch (IOException e) {
-     e.printStackTrace();
-     }
-
-     try {
-     InputStream is = getContentResolver().openInputStream(mNearbyMedia.mUriMedia);
+         @Override
+         public void actionFound(Intent intent) {
 
 
-     } catch (FileNotFoundException e) {
-     e.printStackTrace();
-     }
+             HashMap<String,BluetoothDevice> devices = new HashMap<>(mAyanda.btGetDevices());
+
+             for (BluetoothDevice device: devices.values()) {
+                 if ((!TextUtils.isEmpty(device.getAddress()))
+                         && (!mPeers.containsKey(device.getAddress()))) {
+
+                     Ayanda.Device aDevice = new Ayanda.Device(device);
+                     mPeers.put(device.getName(), aDevice);
+                     addPeerToView(aDevice);
+                 }
+             }
 
 
-     }
-     };**/
+         }
+
+         @Override
+         public void dataRead(byte[] bytes, int numRead) {
+
+         }
+
+         @Override
+         public void connected(BluetoothDevice device) {
+
+         }
+
+         @Override
+         public String getPublicName() {
+             return getLocalBluetoothName();
+         }
+     };
 
     IWifiDirect mNearbyWifiDirect = new IWifiDirect() {
 
@@ -585,15 +597,14 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         @Override
         public void onConnectedAsClient(final InetAddress groupOwnerAddress) {
 
-            Snackbar snackbar = Snackbar
-                    .make(findViewById(R.id.nearbydevices), R.string.status_connected, Snackbar.LENGTH_LONG);
-            snackbar.show();
 
             AyandaClient client = new AyandaClient(AyandaActivity.this);
             int defaultPort = 8080;
 
+            Ayanda.Device device = mPeers.get(groupOwnerAddress.getHostAddress());
             String serverHost = groupOwnerAddress.getHostAddress() + ":" + Integer.toString(defaultPort);
-            getNearbyMedia(serverHost);
+
+            getNearbyMedia(device, serverHost);
 
         }
 
@@ -653,6 +664,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         @Override
         public void onConnectedAsServer(Server server) {
 
+            //what to do here?
         }
 
 

@@ -11,5 +11,7 @@
     <string name="action_duplicate">Duplicate received</string>
     <string name="status_connecting">Connecting...</string>
     <string name="status_connected">Connected!</string>
+    <string name="looking_for_nearby_devices">Looking for nearby devices...</string>
+    <string name="tap_to_connect">Tap to connect</string>
 
 </resources>

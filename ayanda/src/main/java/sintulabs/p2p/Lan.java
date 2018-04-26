@@ -37,14 +37,9 @@ import java.util.Set;
  */
 
 public class Lan extends P2P {
+
     // constants for identifying service and service type
-
-    public final static String SERVICE_TYPE = "_http._tcp.";
-
-
-    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
-    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
-
+    public final static String SERVICE_TYPE = "_ayanda._http._tcp.";
 
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;

@@ -206,6 +206,7 @@ public class WifiDirect extends P2P {
                     if (wifiP2pInfo.groupFormed) {
                         isGroupOwner = wifiP2pInfo.isGroupOwner;
                         groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
+
                         if (isGroupOwner) {
                             isServer = true;
                             onConnectedAsServer();
@@ -224,6 +225,7 @@ public class WifiDirect extends P2P {
      * This device connected as a group owner (server).
      */
     private void onConnectedAsServer() {
+
         iWifiDirect.onConnectedAsServer(Server.server);
     }
 
@@ -286,11 +288,13 @@ public class WifiDirect extends P2P {
         return alDevices;
     }
 
+    private Ayanda.Device mDeviceConnected = null;
+
     /**
      * Connect to a nearby device
      * @param aDevice
      */
-    public void connect(Ayanda.Device aDevice) {
+    public void connect(final Ayanda.Device aDevice) {
 
         WifiP2pDevice device = peers.get(aDevice.getName());
         if (device != null) {
@@ -302,11 +306,13 @@ public class WifiDirect extends P2P {
                 @Override
                 public void onSuccess() {
                     // WiFiDirectBroadcastReceiver notifies us. Ignore for now.
+                    mDeviceConnected = aDevice;
                 }
 
                 @Override
                 public void onFailure(int reason) {
                     // todo if failure == 2
+                    mDeviceConnected = null;
                 }
             });
         }

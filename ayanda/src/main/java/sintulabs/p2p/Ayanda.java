@@ -229,6 +229,14 @@ public class Ayanda {
         public final static int TYPE_WIFI_LAN = 2;
         public final static int TYPE_BLUETOOTH = 3;
 
+        public Device(BluetoothDevice device) {
+
+            this.name = device.getName();
+            this.address = device.getAddress();
+
+            type = TYPE_BLUETOOTH;
+        }
+
         public Device(WifiP2pDevice device) {
 
             this.name = device.deviceName;
