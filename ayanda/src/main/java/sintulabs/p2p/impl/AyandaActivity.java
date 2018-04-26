@@ -40,6 +40,8 @@ import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -728,5 +730,34 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
             }
         }
         linearLayout.addView(newLL);
+    }
+
+    public static byte[] getDigest(InputStream is) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            Log.e(TAG, "Exception while getting digest", e);
+            return null;
+        }
+
+
+        byte[] buffer = new byte[8192];
+        int read;
+        try {
+            while ((read = is.read(buffer)) > 0) {
+                digest.update(buffer, 0, read);
+            }
+            byte[] sum = digest.digest();
+            return sum;
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to process file for " + "SHA1", e);
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                Log.e(TAG, "Exception on closing input stream", e);
+            }
+        }
     }
 }
