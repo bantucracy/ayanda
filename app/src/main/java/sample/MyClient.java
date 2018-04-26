@@ -1,12 +1,15 @@
 package sample;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.os.Environment;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 
 import okhttp3.Call;
@@ -61,13 +64,31 @@ public class MyClient {
         return response.body().string();
     }
 
-    public Boolean uploadFile(String url, NearbyMedia file) {
+    public Boolean uploadFile(String url, final NearbyMedia file) {
         try {
             url = buildUrl(url, SERVICE_UPLOAD_FILE_PATH);
 
+
+
+            final AssetFileDescriptor fd = applicationContext.getContentResolver().openAssetFileDescriptor(file.getMediaUri(), "r");
+            if (fd == null) {
+                throw new FileNotFoundException("could not open file descriptor");
+            }
+            RequestBody requestFile = new RequestBody() {
+                @Override
+                public long contentLength() { return fd.getDeclaredLength(); }
+                @Override
+                public MediaType contentType() { return MediaType.parse(file.getmMimeType()); }
+                @Override
+                public void writeTo(BufferedSink sink) throws IOException {
+                    InputStream is = fd.createInputStream();
+                    sink.writeAll(Okio.buffer(Okio.source(is)));
+                }
+            };
+
             RequestBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                     .addFormDataPart("file", file.getTitle(),
-                            RequestBody.create(MediaType.parse(file.getmMimeType()), file.getFileMedia()))
+                            requestFile)
                     .addFormDataPart("fileExt", getFileExtension(file.getmMimeType()))
                     .build();
 
