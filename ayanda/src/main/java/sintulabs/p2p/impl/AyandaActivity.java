@@ -106,6 +106,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         mAyanda = getAyandaInstance( mNearbyBluetooth, mNearbyWifiLan, mNearbyWifiDirect);
         mAyanda.wdRegisterReceivers();
         mAyanda.btRegisterReceivers();
+        restartNearby();
 
         mNearbyWifiDirect.wifiP2pPeersChangedAction();
         mNearbyWifiLan.deviceListChanged();
