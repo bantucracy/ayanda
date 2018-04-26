@@ -33,5 +33,9 @@ dependencies {
     })
   //  implementation 'com.google.android.gms:play-services-location:11.8.0'
     implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'io.github.lizhangqu:coreprogress:1.0.2'
+    implementation 'com.github.lzyzsd:circleprogress:1.1.0@aar'
+
     testCompile 'junit:junit:4.12'
 }

@@ -4,4 +4,12 @@
     <string name="bt_not_supported">Bluetooth not supported</string>
     <string name="bt_not_enabled">Bluetooth not enabled</string>
     <string name="bt_enabled">Bluetooth enabled</string>
+
+
+    <string name="action_received">Received</string>
+    <string name="status_receiving">Receiving...</string>
+    <string name="action_duplicate">Duplicate received</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_connected">Connected!</string>
+
 </resources>
