@@ -258,5 +258,9 @@ public class Ayanda {
             return name;
         }
 
+        public int getType () {
+            return type;
+        }
+
     }
 }
