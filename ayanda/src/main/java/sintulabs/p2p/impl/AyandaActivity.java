@@ -120,7 +120,9 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
         mAyanda.wdRegisterReceivers();
         mAyanda.btRegisterReceivers();
-        restartNearby();
+
+        mAyanda.lanDiscover();
+        mAyanda.btDiscover();
 
         mNearbyWifiDirect.wifiP2pPeersChangedAction();
         mNearbyLAN.deviceListChanged();
@@ -182,10 +184,6 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
     public abstract void addMedia (final NearbyMedia nearbyMedia);
 
-    protected void restartNearby() {
-        mAyanda.lanDiscover();
-        mAyanda.btDiscover();
-    }
 
     protected void cancelNearby() {
 
@@ -209,11 +207,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (mAyanda != null) {
-            mAyanda.wdRegisterReceivers();
-            mAyanda.btRegisterReceivers();
-            restartNearby();
-        }
+
     }
 
     /* unregister the broadcast receiver */
