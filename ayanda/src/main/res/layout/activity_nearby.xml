@@ -8,12 +8,16 @@
     android:layout_margin="0dp"
     >
 
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/nearbydevicesscroll"
+
+        >
     <LinearLayout
         android:id="@+id/nearbydevices"
-        android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
+        android:layout_width="wrap_content"
+        android:layout_height="180dp"
         android:gravity="center_vertical|center_horizontal"
         android:orientation="horizontal">
 
@@ -23,12 +27,13 @@
             android:layout_margin="20dp"
             android:text="@string/looking_for_nearby_devices" />
     </LinearLayout>
+    </HorizontalScrollView>
 
     <TextView
         android:id="@+id/txt_tap_info"
         android:layout_width="match_parent"
         android:layout_height="31dp"
-        android:layout_below="@+id/nearbydevices"
+        android:layout_below="@+id/nearbydevicesscroll"
         android:gravity="center_horizontal"
         android:layout_marginTop="-30dp"
         android:padding="3dp"
