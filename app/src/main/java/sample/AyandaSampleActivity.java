@@ -33,6 +33,8 @@ public class AyandaSampleActivity extends AyandaActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
+        startAyanda();
     }
 
     @Override
