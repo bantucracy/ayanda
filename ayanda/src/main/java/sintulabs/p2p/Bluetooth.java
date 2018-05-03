@@ -383,15 +383,17 @@ public class Bluetooth extends P2P {
         @Override
         public void run() {
             try {
-               btSocket = btServerSocket.accept();
-                //bluetooth server accepts 1 connection at a time so close after new connection
-                btServerSocket.close();
-                // begin writing data
-                if (btSocket != null) {
-                    DataTransferThread dt = new DataTransferThread(btSocket);
-                    BluetoothDevice device = btSocket.getRemoteDevice();
-                    dataTransferThreads.put(device.getAddress(), dt);
-                    dt.start();
+                if (btServerSocket != null) {
+                    btSocket = btServerSocket.accept();
+                    //bluetooth server accepts 1 connection at a time so close after new connection
+                    btServerSocket.close();
+                    // begin writing data
+                    if (btSocket != null) {
+                        DataTransferThread dt = new DataTransferThread(btSocket);
+                        BluetoothDevice device = btSocket.getRemoteDevice();
+                        dataTransferThreads.put(device.getAddress(), dt);
+                        dt.start();
+                    }
                 }
                 // client has connected
             } catch (IOException e) {

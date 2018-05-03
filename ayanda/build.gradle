@@ -28,7 +28,7 @@ dependencies {
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'io.github.lizhangqu:coreprogress:1.0.2'
 
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
   //  implementation 'com.google.android.gms:play-services-location:11.8.0'
@@ -37,5 +37,5 @@ dependencies {
     implementation 'io.github.lizhangqu:coreprogress:1.0.2'
     implementation 'com.github.lzyzsd:circleprogress:1.1.0@aar'
 
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 }

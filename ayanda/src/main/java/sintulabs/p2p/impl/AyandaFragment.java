@@ -5,28 +5,24 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Color;
-import android.net.Uri;
 import android.net.nsd.NsdServiceInfo;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
-import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -34,7 +30,6 @@ import android.widget.TextView;
 import com.github.lzyzsd.circleprogress.DonutProgress;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Inet4Address;
@@ -42,12 +37,9 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 import io.github.lizhangqu.coreprogress.ProgressUIListener;
 import sintulabs.p2p.Ayanda;
@@ -60,7 +52,7 @@ import sintulabs.p2p.R;
 import sintulabs.p2p.Server;
 
 
-public abstract class AyandaActivity extends AppCompatActivity implements Runnable {
+public abstract class AyandaFragment extends Fragment implements Runnable {
 
     private final static String TAG = "Nearby";
 
@@ -73,25 +65,31 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
     private HashMap<String,Ayanda.Device> mPeers = new HashMap<String,Ayanda.Device>();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_nearby, null);
+    }
 
-        super.onCreate(savedInstanceState);
+    @Override
+    public void onAttach(Context context) {
+        init();
+        super.onAttach(context);
+    }
 
-        setContentView(R.layout.activity_nearby);
+    private void init ()
+    {
+        if (mViewNearbyDevices == null) {
+            mViewNearbyDevices = getView().findViewById(R.id.nearbydevices);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            askForPermission("android.permission.BLUETOOTH", 1);
+            askForPermission("android.permission.BLUETOOTH_ADMIN", 2);
+            askForPermission("android.permission.ACCESS_FINE_LOCATION", 3);
+            askForPermission("android.permission.ACCESS_WIFI_STATE", 4);
+            askForPermission("android.permission.CHANGE_WIFI_STATE", 5);
+            askForPermission("android.permission.ACCESS_NETWORK_STATE", 6);
+            askForPermission("android.permission.CHANGE_NETWORK_STATE", 7);
 
-        mViewNearbyDevices = findViewById(R.id.nearbydevices);
-
-        askForPermission("android.permission.BLUETOOTH", 1);
-        askForPermission("android.permission.BLUETOOTH_ADMIN", 2);
-        askForPermission("android.permission.ACCESS_FINE_LOCATION", 3);
-        askForPermission("android.permission.ACCESS_WIFI_STATE", 4);
-        askForPermission("android.permission.CHANGE_WIFI_STATE", 5);
-        askForPermission("android.permission.ACCESS_NETWORK_STATE", 6);
-        askForPermission("android.permission.CHANGE_NETWORK_STATE", 7);
-
-        new Thread (this).start();
+            new Thread(this).start();
+        }
     }
 
     public void run ()
@@ -133,31 +131,19 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                cancelNearby();
-                finish();
-                break;
-        }
-
-        return true;
-    }
-
     private boolean askForPermission(String permission, Integer requestCode) {
-        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
 
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), permission)) {
 
                 //This is called if user has denied the permission before
                 //In this case I am just asking the permission again
-                ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+                ActivityCompat.requestPermissions(getActivity(), new String[]{permission}, requestCode);
 
             } else {
 
-                ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
+                ActivityCompat.requestPermissions(getActivity(), new String[]{permission}, requestCode);
             }
 
             return true;
@@ -202,7 +188,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     /* unregister the broadcast receiver */
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
 
         if (mAyanda != null) {
@@ -224,7 +210,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
         try {
             int defaultPort = 8080;
-            mAyandaServer = new AyandaServer(this, defaultPort);
+            mAyandaServer = new AyandaServer(getActivity(), defaultPort);
             mAyanda.setServer(mAyandaServer);
 
             mAyanda.wdShareFile(mNearbyMedia);
@@ -270,7 +256,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
             if (!TextUtils.isEmpty(device.getName())) {
 
-                LinearLayout layoutOuter  =new LinearLayout(this);
+                LinearLayout layoutOuter  =new LinearLayout(getActivity());
                 layoutOuter.setLayoutParams(new LinearLayout.LayoutParams(220, 240));
                 layoutOuter.setOrientation(LinearLayout.VERTICAL);
                 layoutOuter.setPadding(5,5,5,5);
@@ -281,7 +267,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
                 DonutProgress donutProgress = mDeviceToProgress.get(device.getName()+device.getHost());
                 if (donutProgress == null) {
-                    donutProgress = new DonutProgress(this);
+                    donutProgress = new DonutProgress(getActivity());
                     mDeviceToProgress.put(device.getName()+device.getHost(),donutProgress);
                 }
 
@@ -294,7 +280,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                 LinearLayout.LayoutParams imParams3 =
                         new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-                TextView tv = new TextView(this);
+                TextView tv = new TextView(getActivity());
 
                 String deviceName = device.getName();
                 deviceName = deviceName.replace("Ayanda.","");
@@ -314,11 +300,11 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         }
 
         if (views.size() > 0)
-            findViewById(R.id.txt_tap_info).setVisibility(View.VISIBLE);
+            getView().findViewById(R.id.txt_tap_info).setVisibility(View.VISIBLE);
         else
-            findViewById(R.id.txt_tap_info).setVisibility(View.GONE);
+            getView().findViewById(R.id.txt_tap_info).setVisibility(View.GONE);
 
-        populateViews(mViewNearbyDevices, views.toArray(new View[views.size()]), this);
+        populateViews(mViewNearbyDevices, views.toArray(new View[views.size()]), getActivity());
 
     }
 
@@ -433,7 +419,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
     {
         new Thread(new Runnable() {
             @Override public void run() {
-                AyandaClient client = new AyandaClient(AyandaActivity.this);
+                AyandaClient client = new AyandaClient(getActivity());
 
                 try {
 
@@ -567,7 +553,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
                          && (!mPeers.containsKey(device.getAddress()))) {
 
                      Ayanda.Device aDevice = new Ayanda.Device(device);
-                     mPeers.put(device.getAddress(), aDevice);
+                     mPeers.put(device.getName(), aDevice);
                      addPeerToView(aDevice);
                  }
              }
@@ -602,7 +588,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         public void onConnectedAsClient(final InetAddress groupOwnerAddress) {
 
 
-            AyandaClient client = new AyandaClient(AyandaActivity.this);
+            AyandaClient client = new AyandaClient(getActivity());
             int defaultPort = 8080;
 
             Ayanda.Device device = mPeers.get(groupOwnerAddress.getHostAddress());
@@ -700,7 +686,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
     {
 
         // kv : May need to replace 'getSherlockActivity()' with 'this' or 'getActivity()'
-        Display display = getWindowManager().getDefaultDisplay();
+        Display display = getActivity().getWindowManager().getDefaultDisplay();
         linearLayout.removeAllViews();
         int maxWidth = display.getWidth() - 20;
 
