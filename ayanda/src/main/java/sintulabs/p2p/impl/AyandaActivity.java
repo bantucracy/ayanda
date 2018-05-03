@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -60,7 +61,7 @@ import sintulabs.p2p.R;
 import sintulabs.p2p.Server;
 
 
-public abstract class AyandaActivity extends AppCompatActivity implements Runnable {
+public abstract class AyandaActivity extends AppCompatActivity {
 
     private final static String TAG = "Nearby";
 
@@ -79,39 +80,50 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
         setContentView(R.layout.activity_nearby);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null)
+         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mViewNearbyDevices = findViewById(R.id.nearbydevices);
 
-        askForPermission("android.permission.BLUETOOTH", 1);
-        askForPermission("android.permission.BLUETOOTH_ADMIN", 2);
-        askForPermission("android.permission.ACCESS_FINE_LOCATION", 3);
-        askForPermission("android.permission.ACCESS_WIFI_STATE", 4);
-        askForPermission("android.permission.CHANGE_WIFI_STATE", 5);
-        askForPermission("android.permission.ACCESS_NETWORK_STATE", 6);
-        askForPermission("android.permission.CHANGE_NETWORK_STATE", 7);
-
-        new Thread (this).start();
     }
 
-    public void run ()
+    private void checkPermissions ()
     {
-        mHandlerViews.sendEmptyMessage(1);
+
 
     }
+
 
     public abstract Ayanda getAyandaInstance (IBluetooth bt, ILan lan, IWifiDirect wifi);
 
-    private void startAyanda ()
+    public void startAyanda ()
     {
 
-        mAyanda = getAyandaInstance( mNearbyBluetooth, mNearbyWifiLan, mNearbyWifiDirect);
+        mAyanda = getAyandaInstance( mNearbyBluetooth, mNearbyLAN, mNearbyWifiDirect);
+
+        askForPermission("android.permission.ACCESS_FINE_LOCATION", 3);
+
+        if (mNearbyBluetooth != null)
+        {
+            askForPermission("android.permission.BLUETOOTH", 1);
+            askForPermission("android.permission.BLUETOOTH_ADMIN", 2);
+        }
+
+        else if (mNearbyWifiDirect != null)
+        {
+
+            askForPermission("android.permission.ACCESS_WIFI_STATE", 4);
+            askForPermission("android.permission.CHANGE_WIFI_STATE", 5);
+            askForPermission("android.permission.ACCESS_NETWORK_STATE", 6);
+            askForPermission("android.permission.CHANGE_NETWORK_STATE", 7);
+        }
+
         mAyanda.wdRegisterReceivers();
         mAyanda.btRegisterReceivers();
         restartNearby();
 
         mNearbyWifiDirect.wifiP2pPeersChangedAction();
-        mNearbyWifiLan.deviceListChanged();
+        mNearbyLAN.deviceListChanged();
 
         try {
             initNearbyMedia();
@@ -180,8 +192,12 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         if (mAyandaServer != null)
             mAyandaServer.stop();
 
-        mAyanda.lanStopAnnouncement();
-        mAyanda.lanStopDiscovery();
+        if (mAyanda != null) {
+            if (mNearbyMedia != null)
+                mAyanda.lanStopAnnouncement();
+
+            mAyanda.lanStopDiscovery();
+        }
 
         //stop wifi p2p?
     }
@@ -252,8 +268,6 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
             if (msg.what == 0)
                 refreshPeerViews();
-            else if (msg.what == 1)
-                startAyanda();
         }
     };
 
@@ -271,7 +285,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
             if (!TextUtils.isEmpty(device.getName())) {
 
                 LinearLayout layoutOuter  =new LinearLayout(this);
-                layoutOuter.setLayoutParams(new LinearLayout.LayoutParams(220, 240));
+                layoutOuter.setLayoutParams(new LinearLayout.LayoutParams(260, 240));
                 layoutOuter.setOrientation(LinearLayout.VERTICAL);
                 layoutOuter.setPadding(5,5,5,5);
                 layoutOuter.setGravity(LinearLayout.HORIZONTAL);
@@ -298,11 +312,10 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
                 String deviceName = device.getName();
                 deviceName = deviceName.replace("Ayanda.","");
-                if (deviceName.length() > 15)
-                    deviceName = deviceName.substring(0,12) + "...";
-
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                }
                 tv.setText(deviceName);
-             //   tv.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                 tv.setLayoutParams(imParams3);
                 layoutOuter.addView(tv);
 
@@ -344,7 +357,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
         }
     }
 
-    ILan mNearbyWifiLan = new ILan() {
+    protected ILan mNearbyLAN = new ILan() {
 
         @Override
         public String getPublicName () {
@@ -531,7 +544,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
 
     }
 
-     IBluetooth mNearbyBluetooth = new IBluetooth() {
+    protected IBluetooth mNearbyBluetooth = new IBluetooth() {
 
          private boolean mInTransfer = false;
          private NearbyMedia mBtNearby = null;
@@ -591,7 +604,7 @@ public abstract class AyandaActivity extends AppCompatActivity implements Runnab
          }
      };
 
-    IWifiDirect mNearbyWifiDirect = new IWifiDirect() {
+    protected IWifiDirect mNearbyWifiDirect = new IWifiDirect() {
 
         @Override
         public String getPublicName () {

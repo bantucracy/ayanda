@@ -32,6 +32,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by sabzo on 12/26/17.
  */
@@ -291,7 +293,15 @@ public class Lan extends P2P {
 
     public void stopDiscovery() {
         if (mDiscoveryListener != null) {
-            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+
+            try {
+                if (mDiscoveryListener != null)
+                    mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+            }
+            catch (IllegalArgumentException iae)
+            {
+                Log.d(getClass().getName(),"Error stopping LAN discovery",iae);
+            }
             mDiscoveryListener = null;
             servicesDiscovered.clear();
             isDiscovering = false;
