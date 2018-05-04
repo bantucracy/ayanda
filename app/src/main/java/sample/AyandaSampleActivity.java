@@ -41,7 +41,8 @@ public class AyandaSampleActivity extends AyandaActivity {
     public synchronized Ayanda getAyandaInstance(IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
 
         if (sAyanda == null) {
-            sAyanda = new Ayanda(this, iBluetooth, iLan, iWifiDirect);
+        //    sAyanda = new Ayanda(this, iBluetooth, iLan, iWifiDirect);
+            sAyanda = new Ayanda(this, null, iLan, null);
         }
         return sAyanda;
     }

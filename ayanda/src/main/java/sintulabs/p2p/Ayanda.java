@@ -109,6 +109,16 @@ public class Ayanda {
     }
 
 
+    public boolean isLanEnabled ()
+    {
+        return lan != null;
+    }
+
+    public boolean isBtEnabled ()
+    {
+        return bt != null;
+    }
+
     public void lanShare (NearbyMedia media) throws IOException {
         lan.shareFile(media);
     }
@@ -178,6 +188,11 @@ public class Ayanda {
 
     public void wdRegisterReceivers() {
         wd.registerReceivers();
+    }
+
+    public boolean isWdEnabled  ()
+    {
+        return wd != null;
     }
 
     public void wdUnregisterReceivers() {

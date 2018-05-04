@@ -118,14 +118,21 @@ public abstract class AyandaActivity extends AppCompatActivity {
             askForPermission("android.permission.CHANGE_NETWORK_STATE", 7);
         }
 
-        mAyanda.wdRegisterReceivers();
-        mAyanda.btRegisterReceivers();
+        if (mAyanda.isWdEnabled()) {
+            mAyanda.wdRegisterReceivers();
+            mNearbyWifiDirect.wifiP2pPeersChangedAction();
+        }
 
-        mAyanda.lanDiscover();
-        mAyanda.btDiscover();
+        if (mAyanda.isBtEnabled()) {
+            mAyanda.btRegisterReceivers();
+            mAyanda.btDiscover();
+        }
 
-        mNearbyWifiDirect.wifiP2pPeersChangedAction();
-        mNearbyLAN.deviceListChanged();
+        if (mAyanda.isLanEnabled()) {
+            mAyanda.lanDiscover();
+            mNearbyLAN.deviceListChanged();
+        }
+
 
         try {
             initNearbyMedia();
@@ -216,8 +223,11 @@ public abstract class AyandaActivity extends AppCompatActivity {
         super.onPause();
 
         if (mAyanda != null) {
-            mAyanda.wdUnregisterReceivers();
-            mAyanda.btUnregisterReceivers();
+            if (mAyanda.isWdEnabled())
+                mAyanda.wdUnregisterReceivers();
+
+            if (mAyanda.isBtEnabled())
+                mAyanda.btUnregisterReceivers();
         }
     }
 
@@ -237,9 +247,14 @@ public abstract class AyandaActivity extends AppCompatActivity {
             mAyandaServer = new AyandaServer(this, defaultPort);
             mAyanda.setServer(mAyandaServer);
 
-            mAyanda.wdShareFile(mNearbyMedia);
-            mAyanda.lanShare(mNearbyMedia);
-            mAyanda.btAnnounce();
+            if (mAyanda.isWdEnabled())
+                mAyanda.wdShareFile(mNearbyMedia);
+
+            if (mAyanda.isLanEnabled())
+                mAyanda.lanShare(mNearbyMedia);
+
+            if (mAyanda.isBtEnabled())
+                mAyanda.btAnnounce();
 
 
         } catch (IOException e) {

@@ -41,7 +41,7 @@ import static android.content.ContentValues.TAG;
 public class Lan extends P2P {
 
     // constants for identifying service and service type
-    public final static String SERVICE_TYPE = "_ayanda._http._tcp.";
+    public final static String SERVICE_TYPE = "_ayanda._tcp.";//"_ayanda._http._tcp.";
 
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
@@ -151,6 +151,8 @@ public class Lan extends P2P {
             @Override
             public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 // Unregistration failed.  Put debugging code here to determine why.
+                Log.e(TAG_DEBUG, "Error unregistering service " + Integer.toString(errorCode));
+
             }
         };
     }
@@ -174,19 +176,24 @@ public class Lan extends P2P {
             }
 
             @Override
-            public void onServiceFound(NsdServiceInfo service) {
+            public void onServiceFound(final NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d(TAG_DEBUG, "Service discovery success" + service);
                 String hash = service.getServiceName();
 
+                if (service.getHost() != null && service.getHost().isAnyLocalAddress())
+                    return;
+
                 if (servicesDiscovered.contains(hash)) {
                     Log.d(TAG_DEBUG, "Service already discovered");
-                    updateDeviceList();
+
                     // Service already discovered -- ignore it!
                 }
                 // Make sure service is the expect type and name
                 else if (service.getServiceType().equals(SERVICE_TYPE) &&
                         service.getServiceName().contains(SERVICE_NAME_BASE)) {
+
+                    servicesDiscovered.add(hash);
 
                     mNsdManager.resolveService(service, new NsdManager.ResolveListener() {
 
@@ -199,18 +206,21 @@ public class Lan extends P2P {
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
-                            Ayanda.Device d = new Ayanda.Device(serviceInfo);
-                            addDeviceToList(d);
-                            updateDeviceList();
-                            iLan.serviceResolved(serviceInfo);
-                            Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
+
+                            if (serviceInfo.getHost() != null && (!serviceInfo.getHost().getHostAddress().equals(clientID))) {
+                                Ayanda.Device d = new Ayanda.Device(serviceInfo);
+                                addDeviceToList(d);
+                                updateDeviceList();
+                                iLan.serviceResolved(serviceInfo);
+                                Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
+
                         /* FYI; ServiceType within listener doesn't have a period at the end.
                          outside the listener it does */
-                            servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
+                                servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
+                            }
                         }
                     });
                 }
-                servicesDiscovered.add(hash);
             }
 
 
@@ -322,31 +332,6 @@ public class Lan extends P2P {
         sbUrl.append(device.getHost().getHostName());
         sbUrl.append(":").append(device.getPort());
         return sbUrl;
-    }
-
-    /* Create a Request Object */
-    private Request buildRequest(StringBuilder url) {
-        return new Request.Builder().url(url.toString())
-                .addHeader("NearbyClientId", clientID).build();
-    }
-
-    private File createFile(String mTitle) {
-        File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        return new File(dirDownloads, new Date().getTime() + "." + mTitle);
-    }
-
-    private void setFileExtension(NearbyMedia media) {
-        String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(media.mMimeType);
-
-        if (fileExt == null) {
-            if (media.mMimeType.startsWith("image"))
-                fileExt = "jpg";
-            else if (media.mMimeType.startsWith("video"))
-                fileExt = "mp4";
-            else if (media.mMimeType.startsWith("audio"))
-                fileExt = "m4a";
-        }
-        media.mTitle += "." + fileExt;
     }
 
     /* Use WiFi Address as a unique device id */
