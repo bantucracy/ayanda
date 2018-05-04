@@ -42,7 +42,7 @@ public class AyandaSampleActivity extends AyandaActivity {
 
         if (sAyanda == null) {
         //    sAyanda = new Ayanda(this, iBluetooth, iLan, iWifiDirect);
-            sAyanda = new Ayanda(this, null, iLan, null);
+            sAyanda = new Ayanda(this, null, null, iWifiDirect);
         }
         return sAyanda;
     }

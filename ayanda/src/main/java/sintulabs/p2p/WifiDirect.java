@@ -41,9 +41,6 @@ public class WifiDirect extends P2P {
     private HashMap<String, WifiP2pDevice> peers = new HashMap<>();
     private IWifiDirect iWifiDirect;
 
-    private NearbyMedia fileToShare;
-
-    private int serverPort = 8080;
     private Boolean isClient = false;
     private Boolean isServer = false;
 
@@ -62,9 +59,6 @@ public class WifiDirect extends P2P {
         createReceiver();
     }
 
-    public void setServerport(int port) {
-        this.serverPort = port;
-    }
 
     /**
      * Create intents for default WiFi direct actions
@@ -172,15 +166,17 @@ public class WifiDirect extends P2P {
             wifiP2pManager.requestPeers(wifiDirectChannel, new WifiP2pManager.PeerListListener() {
                 @Override
                 public void onPeersAvailable(WifiP2pDeviceList peerList) {
-                    peers.clear();
 
                     for (WifiP2pDevice p2pdevice: peerList.getDeviceList()) {
-                        peers.put(p2pdevice.deviceName,p2pdevice);
+                        if (p2pdevice.deviceName.startsWith(SERVICE_NAME_BASE))
+                            peers.put(p2pdevice.deviceName,p2pdevice);
                     }
+
+                    iWifiDirect.wifiP2pPeersChangedAction();
                 }
             });
         }
-        iWifiDirect.wifiP2pPeersChangedAction();
+
     }
 
     /**
@@ -260,6 +256,7 @@ public class WifiDirect extends P2P {
         wifiP2pManager.discoverPeers(wifiDirectChannel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
+                Log.d("Debug", "success looking for peers");
 
             }
 
@@ -348,14 +345,6 @@ public class WifiDirect extends P2P {
     public void sendData(WifiP2pDevice device, byte[] bytes) {
 
 
-    }
-
-    /**
-     * Set the file to share
-     * @param fileToShare
-     */
-    public void setFileToShare(NearbyMedia fileToShare) {
-       this.fileToShare = fileToShare;
     }
 
     public void shareFile(NearbyMedia file) {

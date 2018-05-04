@@ -199,9 +199,11 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
         if (mAyanda != null) {
             if (mNearbyMedia != null)
-                mAyanda.lanStopAnnouncement();
+                if (mAyanda.isLanEnabled())
+                    mAyanda.lanStopAnnouncement();
 
-            mAyanda.lanStopDiscovery();
+            if (mAyanda.isLanEnabled())
+                mAyanda.lanStopDiscovery();
         }
 
         //stop wifi p2p?
@@ -215,6 +217,13 @@ public abstract class AyandaActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
 
+        if (mAyanda != null) {
+            if (mAyanda.isWdEnabled())
+                mAyanda.wdRegisterReceivers();
+
+            if (mAyanda.isBtEnabled())
+                mAyanda.btRegisterReceivers();
+        }
     }
 
     /* unregister the broadcast receiver */
