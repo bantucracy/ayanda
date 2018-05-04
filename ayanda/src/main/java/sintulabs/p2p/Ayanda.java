@@ -285,5 +285,20 @@ public class Ayanda {
             return type;
         }
 
+        public String getTypeReadable () {
+
+            switch (type)
+            {
+                case TYPE_WIFI_P2P:
+                    return "Wifi P2P";
+                case TYPE_WIFI_LAN:
+                    return "Wifi Hotspot";
+                case TYPE_BLUETOOTH:
+                    return "Bluetooth";
+            }
+
+            return null;
+        }
+
     }
 }

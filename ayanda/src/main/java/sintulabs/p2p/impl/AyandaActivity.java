@@ -330,6 +330,9 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
                 String deviceName = device.getName();
                 deviceName = deviceName.replace("Ayanda.","");
+
+                deviceName += " (" + device.getTypeReadable() + ")";
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                     tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                 }
