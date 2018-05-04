@@ -575,6 +575,8 @@ public abstract class AyandaActivity extends AppCompatActivity {
          @Override
          public void actionDiscoveryFinished(Intent intent) {
 
+             if (mAyanda != null)
+                 mAyanda.btDiscover();
          }
 
          @Override
