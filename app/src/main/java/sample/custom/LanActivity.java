@@ -96,17 +96,6 @@ public class LanActivity extends AppCompatActivity {
             }
 
             @Override
-            public void transferComplete(Neighbor neighbor, NearbyMedia media) {
-
-            }
-
-            @Override
-            public void transferProgress(Neighbor neighbor, File fileMedia, String title,
-                                         String mimeType, long transferred, long total) {
-
-            }
-
-            @Override
             public void serviceRegistered(String serviceName) {
                 Toast.makeText(LanActivity.this, "Successfully registered service: " + serviceName, Toast.LENGTH_SHORT).show();
             }
@@ -277,11 +266,7 @@ public class LanActivity extends AppCompatActivity {
             Gson gson = new GsonBuilder()
                     .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
             nearbyMedia.mMetadataJson = gson.toJson("key:value");
-            try {
-                a.lanShare(nearbyMedia);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
         }
     }
 

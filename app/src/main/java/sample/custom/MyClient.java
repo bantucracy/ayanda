@@ -22,7 +22,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
-import sintulabs.p2p.Client;
+
 import sintulabs.p2p.NearbyMedia;
 
 import static android.content.ContentValues.TAG;
@@ -33,7 +33,7 @@ import static android.content.ContentValues.TAG;
 
 public class MyClient {
     private static OkHttpClient mClient;
-    public static Client client = null;
+
     private Context applicationContext;
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/ayanda/file";
@@ -44,7 +44,7 @@ public class MyClient {
      * Create a Client object
      */
     public MyClient(Context applicationContext) {
-        if (client == null) {
+        if (mClient == null) {
             mClient = new OkHttpClient();
         }
     }

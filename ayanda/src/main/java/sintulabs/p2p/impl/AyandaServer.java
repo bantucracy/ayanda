@@ -124,11 +124,6 @@ public class AyandaServer extends NanoHTTPD implements IServer {
     }
 
     @Override
-    public String getAddress () {
-        return getAddress();
-    }
-
-    @Override
     public int getPort() {
         return getListeningPort();
     }

@@ -128,8 +128,9 @@ public class MyServer extends NanoHTTPD implements IServer{
 
     @Override
     public int getPort() {
-        return this.port;
+        return getPort();
     }
+
 
     @Override
     public void setFileToShare(NearbyMedia media) {

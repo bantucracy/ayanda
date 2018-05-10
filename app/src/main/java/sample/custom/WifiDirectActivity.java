@@ -36,7 +36,7 @@ import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.NearbyMedia;
-import sintulabs.p2p.Server;
+
 
 /**
  * Created by sabzo on 1/18/18.
@@ -97,7 +97,7 @@ public class WifiDirectActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onConnectedAsServer(Server server) {
+            public void onConnectedAsServer() {
             
             }
 
@@ -211,8 +211,8 @@ public class WifiDirectActivity extends AppCompatActivity {
                         .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
                 nearbyMedia.mMetadataJson = gson.toJson("key:value");
 
-                a.wdShareFile(nearbyMedia);
-            } catch (IOException e) {
+
+            } catch (Exception e) {
                 nearbyMedia = null;
                 e.printStackTrace();
             }

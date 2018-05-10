@@ -214,17 +214,13 @@ public class Ayanda {
      * @param server A descendant of the server class
      */
     public void setServer(IServer server) {
-        if (lan != null) {
-            lan.setLocalPort(server.getPort());
-        }
-    }
 
-    /**
-     * Add a user defined Client class. This is used to make calls to the server
-     * @param client
-     */
-    public void setClient(IClient client) {
-        Client.createInstance(client);
+        if (lan != null) {
+            lan.setServer(server);
+        }
+        if (wd != null) {
+            wd.setServer(server);
+        }
     }
 
     public static int findOpenSocket() throws java.io.IOException {
@@ -258,7 +254,6 @@ public class Ayanda {
             this.name = parseName(device.getName());
             this.address = device.getAddress();
 
-
             type = TYPE_BLUETOOTH;
             serviceInfo = device;
         }
@@ -273,10 +268,12 @@ public class Ayanda {
         }
 
         public Device(NsdServiceInfo serviceInfo) {
+
             this.port = serviceInfo.getPort();
             this.host = serviceInfo.getHost();
             this.serviceInfo = serviceInfo;
             this.name = parseName(serviceInfo.getServiceName());
+            this.address = host.getHostAddress();
 
             type = TYPE_WIFI_LAN;
         }
@@ -333,6 +330,10 @@ public class Ayanda {
             }
 
             return null;
+        }
+
+        public String getDeviceId () {
+            return name + "@" + address;
         }
 
     }

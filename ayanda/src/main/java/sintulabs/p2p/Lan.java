@@ -46,7 +46,7 @@ public class Lan extends P2P {
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
     // For announcing service
-    private int localPort = 0;
+    private IServer mServer;
     private Context mContext;
     private String mServiceName;
     private NsdManager.RegistrationListener mRegistrationListener;
@@ -72,8 +72,8 @@ public class Lan extends P2P {
         clientID = getWifiAddress(context);
     }
 
-    public void setLocalPort(int port) {
-        this.localPort = port;
+    public void setServer(IServer server) {
+        mServer = server;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class Lan extends P2P {
         // with other services advertised on the same network.
         serviceInfo.setServiceName(SERVICE_NAME_BASE + iLan.getPublicName());
         serviceInfo.setServiceType(SERVICE_TYPE);
-        serviceInfo.setPort(localPort);
+        serviceInfo.setPort(mServer.getPort());
 
         mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
 
@@ -106,7 +106,7 @@ public class Lan extends P2P {
         if (!serviceAnnounced) {
             mNsdManager.registerService(
                     serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-            msg = "Announcing on LAN: " + iLan.getPublicName() + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
+            msg = "Announcing on LAN: " + iLan.getPublicName() + " : " + SERVICE_TYPE + "on port: " + String.valueOf(mServer.getPort());
         } else {
             msg = "Service already announced";
         }

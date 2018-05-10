@@ -56,9 +56,7 @@ import sintulabs.p2p.IBluetooth;
 import sintulabs.p2p.ILan;
 import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.NearbyMedia;
-import sintulabs.p2p.Neighbor;
 import sintulabs.p2p.R;
-import sintulabs.p2p.Server;
 
 
 public abstract class AyandaActivity extends AppCompatActivity {
@@ -251,7 +249,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
         try {
             mAyandaServer = new AyandaServer(this, 0);
 
-            while (mAyandaServer.getPort() > 0)
+            while (mAyandaServer.getPort() <= 0)
             {
                 try { Thread.sleep(500);} catch (Exception e){}
             }
@@ -264,6 +262,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
                     mAyanda.btAnnounce()
                             ;
             mAyanda.lanAnnounce();//still announce yourself on the lan
+
             mAyanda.wdDiscover();//still look for peers
 
         } catch (IOException e) {
@@ -318,10 +317,10 @@ public abstract class AyandaActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams imParams2 =
                         new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-                DonutProgress donutProgress = mDeviceToProgress.get(device.getName()+device.getHost());
+                DonutProgress donutProgress = mDeviceToProgress.get(device.getDeviceId());
                 if (donutProgress == null) {
                     donutProgress = new DonutProgress(this);
-                    mDeviceToProgress.put(device.getName()+device.getHost(),donutProgress);
+                    mDeviceToProgress.put(device.getDeviceId(),donutProgress);
                 }
 
                 donutProgress.setLayoutParams(imParams2);
@@ -486,7 +485,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
                             public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
 
                                 if (device != null) {
-                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    DonutProgress progress = mDeviceToProgress.get(device.getDeviceId());
                                     if (progress != null)
                                         progress.setProgress((int) (100 * percent));
                                 }
@@ -499,7 +498,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
                                 Log.d("TAG", "onUIProgressFinish:");
 
                                 if (device != null) {
-                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    DonutProgress progress = mDeviceToProgress.get(device.getDeviceId());
                                     if (progress != null)
                                         progress.setProgress(100);
                                 }
@@ -524,7 +523,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
                             public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
 
                                 if (device != null) {
-                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    DonutProgress progress = mDeviceToProgress.get(device.getDeviceId());
                                     if (progress != null)
                                         progress.setProgress((int) (100 * percent));
                                 }
@@ -538,7 +537,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
                                 //  Toast.makeText(getApplicationContext(), "结束上传", Toast.LENGTH_SHORT).show();
 
                                 if (device != null) {
-                                    DonutProgress progress = mDeviceToProgress.get(device.getName() + device.getHost());
+                                    DonutProgress progress = mDeviceToProgress.get(device.getDeviceId());
                                     if (progress != null)
                                         progress.setProgress(100);
                                 }
