@@ -32,14 +32,13 @@ public class AyandaServer extends NanoHTTPD implements IServer {
 
     private NearbyMedia fileToShare;
 
-    private int port;
     private Context context;
 
     public AyandaServer(Context context, int port) throws java.io.IOException {
         super(port);
         this.context = context;
-        this.port = port;
         start();
+
 
     }
 
@@ -125,8 +124,13 @@ public class AyandaServer extends NanoHTTPD implements IServer {
     }
 
     @Override
+    public String getAddress () {
+        return getAddress();
+    }
+
+    @Override
     public int getPort() {
-        return this.port;
+        return getListeningPort();
     }
 
     @Override

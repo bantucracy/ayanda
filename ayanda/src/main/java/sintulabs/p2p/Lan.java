@@ -91,29 +91,26 @@ public class Lan extends P2P {
         String msg;
         // Create the NsdServiceInfo object, and populate it.
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
-        if (Server.server == null) {
-            msg = "No Server implementation found";
-            Log.d(TAG_DEBUG, msg);
+
+        // The name is   subject to change based on conflicts
+        // with other services advertised on the same network.
+        serviceInfo.setServiceName(SERVICE_NAME_BASE + iLan.getPublicName());
+        serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setPort(localPort);
+
+        mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
+
+        if (mRegistrationListener == null)
+            initializeRegistrationListener();
+
+        if (!serviceAnnounced) {
+            mNsdManager.registerService(
+                    serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+            msg = "Announcing on LAN: " + iLan.getPublicName() + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
         } else {
-            // The name is   subject to change based on conflicts
-            // with other services advertised on the same network.
-            serviceInfo.setServiceName(SERVICE_NAME_BASE + iLan.getPublicName());
-            serviceInfo.setServiceType(SERVICE_TYPE);
-            serviceInfo.setPort(localPort);
-
-            mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
-
-            if (mRegistrationListener == null)
-                initializeRegistrationListener();
-
-            if (!serviceAnnounced) {
-                mNsdManager.registerService(
-                        serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-                msg = "Announcing on LAN: " + iLan.getPublicName() + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
-            } else {
-                msg = "Service already announced";
-            }
+            msg = "Service already announced";
         }
+
 
         Log.d(TAG_DEBUG, msg);
     }
@@ -354,11 +351,5 @@ public class Lan extends P2P {
         return deviceList;
     }
 
-    /* Share file with nearby devices */
-    public void shareFile(NearbyMedia media) throws IOException {
-        //this.fileToShare = media;
-        Server.getInstance().setFileToShare(media);
-        announce();
-    }
 
 }

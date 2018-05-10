@@ -134,10 +134,6 @@ public class Ayanda {
         return bt != null;
     }
 
-    public void lanShare (NearbyMedia media) throws IOException {
-        lan.shareFile(media);
-    }
-
     public void lanAnnounce() {
         lan.announce();
     }
@@ -171,11 +167,6 @@ public class Ayanda {
     public void wdSendData(WifiP2pDevice device, byte[] bytes) {
         wd.sendData(device, bytes);
     }
-
-    public void wdShareFile (NearbyMedia media) throws IOException {
-        wd.shareFile(media);
-    }
-
 
     /**
      * Connect to a WifiDirect device
@@ -223,7 +214,6 @@ public class Ayanda {
      * @param server A descendant of the server class
      */
     public void setServer(IServer server) {
-        Server.createInstance(server);
         if (lan != null) {
             lan.setLocalPort(server.getPort());
         }

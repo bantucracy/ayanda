@@ -6,5 +6,6 @@ package sintulabs.p2p;
 
 public interface IServer {
     public int getPort();
+    public String getAddress();
     public void setFileToShare(NearbyMedia media);
 }

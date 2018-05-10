@@ -147,11 +147,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
             Log.e(TAG,"Error init nearby media",e);
         }
 
-        try {
-                startServer();
-        } catch (IOException e) {
-            Log.e(TAG,"Error starting server");
-        }
+        startServer();
 
     }
 
@@ -250,23 +246,25 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
     public abstract void initNearbyMedia () throws IOException;
 
-    private void startServer() throws IOException {
+    private void startServer() {
 
         try {
-            int defaultPort = 8080;
-            mAyandaServer = new AyandaServer(this, defaultPort);
+            mAyandaServer = new AyandaServer(this, 0);
+
+            while (mAyandaServer.getPort() > 0)
+            {
+                try { Thread.sleep(500);} catch (Exception e){}
+            }
+
+            mAyandaServer.setFileToShare(mNearbyMedia);
             mAyanda.setServer(mAyandaServer);
 
-            if (mNearbyMedia != null) {
-                if (mAyanda.isWdEnabled())
-                    mAyanda.wdShareFile(mNearbyMedia);
-
-                if (mAyanda.isLanEnabled())
-                    mAyanda.lanShare(mNearbyMedia);
-
+            if (mNearbyMedia != null)
                 if (mAyanda.isBtEnabled())
-                    mAyanda.btAnnounce();
-            }
+                    mAyanda.btAnnounce()
+                            ;
+            mAyanda.lanAnnounce();//still announce yourself on the lan
+            mAyanda.wdDiscover();//still look for peers
 
         } catch (IOException e) {
             Log.e(TAG,"error setting server and sharing file",e);
@@ -412,17 +410,6 @@ public abstract class AyandaActivity extends AppCompatActivity {
         }
 
         @Override
-        public void transferComplete(Neighbor neighbor, NearbyMedia nearbyMedia) {
-
-        }
-
-        @Override
-        public void transferProgress(Neighbor neighbor, File file, String s, String s1, long l, long l1) {
-
-
-        }
-
-        @Override
         public void serviceRegistered(String s) {
 
         }
@@ -446,7 +433,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
         mAyanda.connectToDevice(device);
 
         if (device.getType() == Ayanda.Device.TYPE_WIFI_LAN) {
-            String serverHost = null; //device.getHost().getHostName() + ":" + 8080;
+            String serverHost = null;
 
             try {
 
@@ -710,9 +697,11 @@ public abstract class AyandaActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onConnectedAsServer(Server server) {
+        public void onConnectedAsServer() {
 
             //what to do here?
+
+
         }
 
 

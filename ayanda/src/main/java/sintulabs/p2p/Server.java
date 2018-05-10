@@ -5,6 +5,7 @@ import java.io.IOException;
 
 public class Server {
 
+    /**
     public static Server server;
     private IServer mServer;
 
@@ -35,6 +36,6 @@ public class Server {
             throw new IOException("Server not defined");
         }
         return server;
-    }
+    }**/
 
 }

@@ -76,7 +76,6 @@ public class AyandaSampleActivity extends AyandaActivity {
                 .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
         mNearbyMedia.mMetadataJson = gson.toJson(mNearbyMedia);
 
-
     }
 
 }
