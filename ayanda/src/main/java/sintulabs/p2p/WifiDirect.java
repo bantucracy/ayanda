@@ -15,6 +15,9 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.IOException;
@@ -22,9 +25,11 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED;
+import static sintulabs.p2p.Lan.SERVICE_TYPE;
 
 /**
  * WiFi Direct P2P Class for detecting and connecting to nearby devices
@@ -43,6 +48,10 @@ public class WifiDirect extends P2P {
 
     private Boolean isClient = false;
     private Boolean isServer = false;
+
+    private static final String SERVICE_INSTANCE = "Ayanda";
+
+    private final static String TAG = "AyandaWifiDirect";
 
     /**
      * Creates a WifiDirect instance
@@ -222,7 +231,7 @@ public class WifiDirect extends P2P {
      */
     private void onConnectedAsServer() {
 
-        iWifiDirect.onConnectedAsServer(Server.server);
+        iWifiDirect.onConnectedAsServer();
     }
 
     /**
@@ -347,14 +356,6 @@ public class WifiDirect extends P2P {
 
     }
 
-    public void shareFile(NearbyMedia file) {
-        try {
-            Server.getInstance().setFileToShare(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        discover();
-    }
     /**
      * Android 8.0+ requires location to be turned on when discovering
      * nearby devices.
@@ -428,5 +429,125 @@ public class WifiDirect extends P2P {
     @Override
     public Boolean isEnabled() {
         return null;
+    }
+
+    class TransferConstants
+    {
+        public final static String KEY_BUDDY_NAME = "buddy";
+        public final static String KEY_PORT_NUMBER = "port";
+        public final static String KEY_DEVICE_STATUS = "status";
+        public final static String KEY_WIFI_IP = "wifiip";
+    }
+
+    public void startRegistrationAndDiscovery(String serverIP, int port) {
+
+        String player = "My Cool Guy Name";
+
+        Map<String, String> record = new HashMap<String, String>();
+        record.put(TransferConstants.KEY_BUDDY_NAME, player == null ? Build.MANUFACTURER : player);
+        record.put(TransferConstants.KEY_PORT_NUMBER, String.valueOf(port));
+        record.put(TransferConstants.KEY_DEVICE_STATUS, "available");
+        record.put(TransferConstants.KEY_WIFI_IP, serverIP);
+
+        WifiP2pDnsSdServiceInfo service = WifiP2pDnsSdServiceInfo.newInstance(
+                SERVICE_INSTANCE, SERVICE_TYPE, record);
+        wifiP2pManager.addLocalService(wifiDirectChannel, service, new WifiP2pManager.ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Added Local Service");
+            }
+
+            @Override
+            public void onFailure(int error) {
+                Log.e(TAG, "ERRORCEPTION: Failed to add a service");
+            }
+        });
+        discoverService();
+    }
+
+    WifiP2pDnsSdServiceRequest serviceRequest;
+
+    private void discoverService() {
+
+        /*
+         * Register listeners for DNS-SD services. These are callbacks invoked
+         * by the system when a service is actually discovered.
+         */
+
+        wifiP2pManager.setDnsSdResponseListeners(wifiDirectChannel,
+                new WifiP2pManager.DnsSdServiceResponseListener() {
+
+                    @Override
+                    public void onDnsSdServiceAvailable(String instanceName,
+                                                        String registrationType, WifiP2pDevice srcDevice) {
+                        Log.d(TAG, instanceName + "####" + registrationType);
+                        // A service has been discovered. Is this our app?
+                        if (instanceName.equalsIgnoreCase(SERVICE_INSTANCE)) {
+                            // yes it is
+                            /**
+                            WiFiP2pServiceHolder serviceHolder = new WiFiP2pServiceHolder();
+                            serviceHolder.device = srcDevice;
+                            serviceHolder.registrationType = registrationType;
+                            serviceHolder.instanceName = instanceName;
+                            connectP2p(serviceHolder);
+                             **/
+                        } else {
+                            //no it isn't
+                        }
+                    }
+                }, new WifiP2pManager.DnsSdTxtRecordListener() {
+
+                    @Override
+                    public void onDnsSdTxtRecordAvailable(
+                            String fullDomainName, Map<String, String> record,
+                            WifiP2pDevice device) {
+                        boolean isGroupOwner = device.isGroupOwner();
+
+                        int peerPort = Integer.parseInt(record.get(TransferConstants.KEY_PORT_NUMBER).toString());
+                        String peerIP= record.get(TransferConstants.KEY_WIFI_IP).toString();
+
+                        Log.v(TAG, Build.MANUFACTURER + ". peer port received: " + peerPort);
+                        /**
+                        if (peerIP != null && peerPort > 0 && !isConnectionInfoSent) {
+                            String player = record.get(TransferConstants.KEY_BUDDY_NAME).toString();
+
+                            DataSender.sendCurrentDeviceData(LocalDashWiFiP2PSD.this,
+                                    peerIP, peerPort, true);
+                            isWDConnected = true;
+                            isConnectionInfoSent = true;
+                        }**/
+
+                    }
+                });
+
+        // After attaching listeners, create a service request and initiate
+        // discovery.
+        serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
+        wifiP2pManager.addServiceRequest(wifiDirectChannel, serviceRequest,
+                new WifiP2pManager.ActionListener() {
+
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Added service discovery request");
+                    }
+
+                    @Override
+                    public void onFailure(int arg0) {
+                        Log.d(TAG, "ERRORCEPTION: Failed adding service discovery request");
+                    }
+                });
+        wifiP2pManager.discoverServices(wifiDirectChannel, new WifiP2pManager.ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Service discovery initiated");
+            }
+
+            @Override
+            public void onFailure(int arg0) {
+                Log.d(TAG, "Service discovery failed: " + arg0);
+            }
+        });
     }
 }
