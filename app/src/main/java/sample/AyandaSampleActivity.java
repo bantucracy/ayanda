@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,34 +50,32 @@ public class AyandaSampleActivity extends AyandaActivity {
 
       public synchronized void addMedia (final NearbyMedia nearbyMedia)
       {
-          //use this to story received media
+          //use this to store received media
 
           //Read from: nearbyMedia.mUriMedia and write to permanent storage
 
-
+          Toast.makeText(this,"Received file: " + nearbyMedia.getTitle(),Toast.LENGTH_SHORT).show();
       }
 
 
     public void initNearbyMedia () throws IOException
     {
 
-
         mNearbyMedia = new NearbyMedia();
-        Uri uriMedia = Uri.parse("/path/to/your/file");
+        Uri uriMedia = Uri.parse("file:///android_asset/test.jpg");
         mNearbyMedia.mUriMedia = uriMedia;
 
-        InputStream is = getContentResolver().openInputStream(uriMedia);
+        InputStream is = getAssets().open("test.jpg");
         byte[] digest = getDigest(is);
         mNearbyMedia.mDigest = digest;
-
-        String title = "My File";
+        mNearbyMedia.mTitle = "Turtle of Akumal";
+        mNearbyMedia.mMimeType = "image/jpeg";
+        mNearbyMedia.mLength = getAssets().openFd("test.jpg").getLength();
 
         Gson gson = new GsonBuilder()
                 .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
         mNearbyMedia.mMetadataJson = gson.toJson(mNearbyMedia);
 
-        mNearbyMedia.mTitle = "My File";
-        mNearbyMedia.mMimeType = "image/jpeg";
     }
 
 }

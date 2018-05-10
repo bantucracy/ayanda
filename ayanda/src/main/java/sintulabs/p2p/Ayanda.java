@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +49,17 @@ public class Ayanda {
         }
     }
 
+    public void connectToDevice (Ayanda.Device device)
+    {
+        if (device.getType() == Device.TYPE_BLUETOOTH)
+            btConnect((BluetoothDevice)device.getServiceInfo());
+        else if (device.getType() == Device.TYPE_WIFI_P2P)
+            wdConnect((WifiP2pDevice) device.getServiceInfo());
+        else if (device.getType() == Device.TYPE_WIFI_LAN) {
+            //no special connection needed
+        }
+    }
+
     /**
      * Discover nearby devices that have made themselves detectable via blue Bluetooth.
      * Discovered devices are stored in a collection of devices found.
@@ -61,6 +74,15 @@ public class Ayanda {
      */
     public void btConnect(BluetoothDevice device) {
        bt.connect(device);
+    }
+
+
+    /**
+     * Connects to a discovered bluetooth device. Role: Client
+     * @param device Bluetooth Device
+     */
+    public void btConnect(Ayanda.Device device) {
+        bt.connect((BluetoothDevice)device.getServiceInfo());
     }
 
     /**
@@ -234,7 +256,7 @@ public class Ayanda {
     public static class Device {
         private InetAddress host;
         private Integer port;
-        NsdServiceInfo serviceInfo;
+        private Object serviceInfo;
 
         private String address;
         private String name;
@@ -244,29 +266,59 @@ public class Ayanda {
         public final static int TYPE_WIFI_LAN = 2;
         public final static int TYPE_BLUETOOTH = 3;
 
+        private final static String AYANDA_DEVICE_IDENTIFIER = "Ayanda.";
+
+        public HashMap<String,Device> altDevices = new HashMap<>();
+
         public Device(BluetoothDevice device) {
 
-            this.name = device.getName();
+            this.name = parseName(device.getName());
             this.address = device.getAddress();
 
+
             type = TYPE_BLUETOOTH;
+            serviceInfo = device;
         }
 
         public Device(WifiP2pDevice device) {
 
-            this.name = device.deviceName;
+            this.name = parseName(device.deviceName);
             this.address = device.deviceAddress;
 
             type = TYPE_WIFI_P2P;
+            serviceInfo = device;
         }
 
         public Device(NsdServiceInfo serviceInfo) {
             this.port = serviceInfo.getPort();
             this.host = serviceInfo.getHost();
             this.serviceInfo = serviceInfo;
-            this.name = serviceInfo.getServiceName();
+            this.name = parseName(serviceInfo.getServiceName());
 
             type = TYPE_WIFI_LAN;
+        }
+
+        private String parseName (String deviceName)
+        {
+            if (!TextUtils.isEmpty(deviceName))
+                return deviceName.replace(AYANDA_DEVICE_IDENTIFIER,"");
+            else
+                return deviceName;
+        }
+
+        public void addAltDevice (Device device)
+        {
+            altDevices.put(device.getName()+device.getType(),device);
+        }
+
+        public Collection<Device> getAltDevices ()
+        {
+            return altDevices.values();
+        }
+
+        public Object getServiceInfo ()
+        {
+            return serviceInfo;
         }
 
         public InetAddress getHost() {

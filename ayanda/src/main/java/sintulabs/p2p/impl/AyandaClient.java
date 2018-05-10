@@ -4,10 +4,12 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,6 +54,7 @@ public class AyandaClient {
         if (client == null) {
             mClient = new OkHttpClient();
         }
+        this.applicationContext = applicationContext;
     }
 
 
@@ -69,27 +72,30 @@ public class AyandaClient {
         return response.body().string();
     }
 
-    public Boolean uploadFile(String url, NearbyMedia file, ProgressUIListener progressUIListener) {
+    public Boolean uploadFile(String url, final NearbyMedia file, ProgressUIListener progressUIListener) {
         try {
             url = buildUrl(url, SERVICE_UPLOAD_FILE_PATH);
 
             final String mimeType = file.getmMimeType();
-            InputStream is = applicationContext.getContentResolver().openInputStream(file.getMediaUri());
 
-
-            final AssetFileDescriptor fd = applicationContext.getContentResolver().openAssetFileDescriptor(file.getMediaUri(), "r");
-            if (fd == null) {
-                throw new FileNotFoundException("could not open file descriptor");
-            }
             RequestBody requestFile = new RequestBody() {
                 @Override
-                public long contentLength() { return fd.getDeclaredLength(); }
+                public long contentLength() { return file.mLength; }
                 @Override
                 public MediaType contentType() { return MediaType.parse(mimeType); }
                 @Override
                 public void writeTo(BufferedSink sink) throws IOException {
-                        InputStream is = fd.createInputStream();
-                        sink.writeAll(Okio.buffer(Okio.source(is)));
+
+                    InputStream is = null;
+
+                    if (file.getMediaUri().getPath().contains("android_asset"))
+                    {
+                        is = applicationContext.getAssets().open(file.getMediaUri().getLastPathSegment());
+                    }
+                    else
+                        is = applicationContext.getContentResolver().openInputStream(file.getMediaUri());
+
+                    sink.writeAll(Okio.buffer(Okio.source(is)));
                 }
             };
 
@@ -111,11 +117,6 @@ public class AyandaClient {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     Log.d("", "Upload request unsuccessful");
-                    try {
-                        fd.close();
-                    } catch (IOException ex) {
-                        //e.addSuppressed(ex);
-                    }
                     Log.e(TAG, "failed", e);
                 }
 
@@ -126,7 +127,6 @@ public class AyandaClient {
                     } else {
                         Log.d("", "Upload successful");
                     }
-                    fd.close();
                 }
             });
 

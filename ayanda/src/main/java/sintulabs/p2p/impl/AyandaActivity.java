@@ -270,10 +270,17 @@ public abstract class AyandaActivity extends AppCompatActivity {
             Log.e(TAG,"error setting server and sharing file",e);
         }
 
-
     }
 
-    private void addPeerToView(Ayanda.Device newPeer) {
+    private synchronized void addPeerToView(Ayanda.Device device) {
+
+        if (mPeers.containsKey(device.getName()))
+        {
+            Ayanda.Device existingDevice = mPeers.get(device.getName());
+            existingDevice.addAltDevice(device);
+        }
+        else
+            mPeers.put(device.getName(), device);
 
         mHandlerViews.sendEmptyMessage(0);
     }
@@ -329,9 +336,6 @@ public abstract class AyandaActivity extends AppCompatActivity {
                 TextView tv = new TextView(this);
 
                 String deviceName = device.getName();
-                deviceName = deviceName.replace("Ayanda.","");
-
-                deviceName += " (" + device.getTypeReadable() + ")";
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                     tv.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -344,15 +348,16 @@ public abstract class AyandaActivity extends AppCompatActivity {
                 layoutOuter.setOnClickListener(new DeviceOnClickListener(device,donutProgress));
 
                 views.add(layoutOuter);
+
             }
         }
 
-        if (views.size() > 0)
+        if (views.size() > 0) {
+            populateViews(mViewNearbyDevices, views.toArray(new View[views.size()]), this);
             findViewById(R.id.txt_tap_info).setVisibility(View.VISIBLE);
+        }
         else
             findViewById(R.id.txt_tap_info).setVisibility(View.GONE);
-
-        populateViews(mViewNearbyDevices, views.toArray(new View[views.size()]), this);
 
     }
 
@@ -369,12 +374,12 @@ public abstract class AyandaActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
 
-            mProgress.setInnerBackgroundColor(Color.GREEN);
+            mProgress.setInnerBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
 
-            if (mDevice.getType() == Ayanda.Device.TYPE_WIFI_P2P)
-                mAyanda.wdConnect(mDevice);
-            else if (mDevice.getType() == Ayanda.Device.TYPE_WIFI_LAN)
-                connectToDevice(mDevice);
+            connectToDevice(mDevice);
+
+            for (Ayanda.Device altDevice : mDevice.getAltDevices())
+                connectToDevice(altDevice);
         }
     }
 
@@ -397,8 +402,6 @@ public abstract class AyandaActivity extends AppCompatActivity {
                         && (!device.getName().equals(getPublicName()))
                         && (!mPeers.containsKey(device.getHost().toString()))) {
 
-
-                    mPeers.put(device.getName(), device);
                     addPeerToView(device);
                 }
             }
@@ -436,31 +439,37 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
     public void connectToDevice (Ayanda.Device device)
     {
-        String serverHost = null; //device.getHost().getHostName() + ":" + 8080;
 
-        try {
+        mAyanda.connectToDevice(device);
 
-            InetAddress hostInet =InetAddress.getByName(device.getHost().getHostAddress());
+        if (device.getType() == Ayanda.Device.TYPE_WIFI_LAN) {
+            String serverHost = null; //device.getHost().getHostName() + ":" + 8080;
 
-            if (!hostInet.isLoopbackAddress()) {
+            try {
 
-                byte [] addressBytes = hostInet.getAddress();
+                InetAddress hostInet = InetAddress.getByName(device.getHost().getHostAddress());
 
-                // Inet6Address dest6 = Inet6Address.getByAddress(Data.get(position).getHost().GetHostAddress(), addressBytes, NetworkInterface.getByInetAddress(hostInet));
-                InetAddress dest4 = Inet4Address.getByAddress (device.getHost().getHostAddress(), addressBytes);
+                if (!hostInet.isLoopbackAddress()) {
 
-                if (dest4 instanceof Inet6Address)
-                    serverHost = "[" + dest4.getHostAddress() + "]:" + device.getPort().intValue();
-                else
-                    serverHost = dest4.getHostAddress() + ":" + device.getPort().intValue();
+                    byte[] addressBytes = hostInet.getAddress();
 
-                getNearbyMedia(device,serverHost);
+                    // Inet6Address dest6 = Inet6Address.getByAddress(Data.get(position).getHost().GetHostAddress(), addressBytes, NetworkInterface.getByInetAddress(hostInet));
+                    InetAddress dest4 = Inet4Address.getByAddress(device.getHost().getHostAddress(), addressBytes);
+
+                    if (dest4 instanceof Inet6Address)
+                        serverHost = "[" + dest4.getHostAddress() + "]:" + device.getPort().intValue();
+                    else
+                        serverHost = dest4.getHostAddress() + ":" + device.getPort().intValue();
+
+                    getNearbyMedia(device, serverHost);
+                }
+
+            } catch (IOException e) {
+                Log.e(TAG, "error LAN get: " + e);
+                return;
             }
-
-        } catch (IOException e) {
-            Log.e(TAG,"error LAN get: " + e);
-            return;
         }
+
     }
 
     private void getNearbyMedia (final Ayanda.Device device, final String serverHost)
@@ -603,7 +612,6 @@ public abstract class AyandaActivity extends AppCompatActivity {
                          && (!mPeers.containsKey(device.getAddress()))) {
 
                      Ayanda.Device aDevice = new Ayanda.Device(device);
-                     mPeers.put(device.getAddress(), aDevice);
                      addPeerToView(aDevice);
                  }
              }
@@ -637,13 +645,11 @@ public abstract class AyandaActivity extends AppCompatActivity {
         @Override
         public void onConnectedAsClient(final InetAddress groupOwnerAddress) {
 
-
-            AyandaClient client = new AyandaClient(AyandaActivity.this);
-            int defaultPort = 8080;
-
             Ayanda.Device device = mPeers.get(groupOwnerAddress.getHostAddress());
-            String serverHost = groupOwnerAddress.getHostAddress() + ":" + Integer.toString(defaultPort);
-
+            int serverPort = device.getPort();
+            if (serverPort == -1)
+                serverPort = 8080;
+            String serverHost = groupOwnerAddress.getHostAddress() + ":" + Integer.toString(serverPort);
             getNearbyMedia(device, serverHost);
 
         }
@@ -680,7 +686,6 @@ public abstract class AyandaActivity extends AppCompatActivity {
                         && (!device.getName().equals(getPublicName()))
                         && (!mPeers.containsKey(device.getName()))) {
 
-                    mPeers.put(device.getName(), device);
                     addPeerToView(device);
 
                 }

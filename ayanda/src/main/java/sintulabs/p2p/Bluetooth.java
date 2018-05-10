@@ -97,7 +97,8 @@ public class Bluetooth extends P2P {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             context.startActivity(discoverableIntent);
-            new ServerThread(true).start();
+            boolean requirePaired = false;
+            new ServerThread(requirePaired).start();
         }
     }
 
@@ -423,7 +424,8 @@ public class Bluetooth extends P2P {
         public ClientThread(BluetoothDevice device) {
             this.device = device;
             try {
-                socket = device.createRfcommSocketToServiceRecord(
+                //"insecure" means it doesn't require pairing
+                socket = device.createInsecureRfcommSocketToServiceRecord(
                         java.util.UUID.fromString(UUID));
             } catch (IOException e) {
                 e.printStackTrace();
