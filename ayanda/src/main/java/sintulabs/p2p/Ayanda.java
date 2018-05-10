@@ -109,13 +109,6 @@ public class Ayanda {
         bt.announce();
     }
 
-    /**
-     * Get the names of the Bluetooth devices discovered
-     * @return
-     */
-    public Set<String> btGetDeviceNamesDiscovered() {
-        return bt.getDeviceNamesDiscovered();
-    }
 
     public HashMap<String, BluetoothDevice> btGetDevices() {
         return bt.getDeviceList();
