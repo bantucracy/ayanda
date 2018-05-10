@@ -75,8 +75,9 @@ public class BluetoothActivity extends AppCompatActivity {
             @Override
             public void actionFound(Intent intent) {
                 peersAdapter.clear();
-                peersAdapter.addAll(a.btGetDeviceNamesDiscovered());
                 devices = a.btGetDevices();
+
+                peersAdapter.addAll(devices.keySet());
             }
 
             @Override
