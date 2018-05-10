@@ -98,6 +98,11 @@ public abstract class AyandaActivity extends AppCompatActivity {
 
     public void startAyanda ()
     {
+        new Thread () { public void run() { startAyandaSync(); }}.start();
+    }
+
+    private void startAyandaSync ()
+    {
 
         mAyanda = getAyandaInstance( mNearbyBluetooth, mNearbyLAN, mNearbyWifiDirect);
 
@@ -138,19 +143,15 @@ public abstract class AyandaActivity extends AppCompatActivity {
             initNearbyMedia();
         }
         catch (Exception e)
-        {}
-
-        if (mNearbyMedia != null) {
-            try {
-                startServer();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        } else {
-
+        {
+            Log.e(TAG,"Error init nearby media",e);
         }
 
+        try {
+                startServer();
+        } catch (IOException e) {
+            Log.e(TAG,"Error starting server");
+        }
 
     }
 
@@ -256,15 +257,16 @@ public abstract class AyandaActivity extends AppCompatActivity {
             mAyandaServer = new AyandaServer(this, defaultPort);
             mAyanda.setServer(mAyandaServer);
 
-            if (mAyanda.isWdEnabled())
-                mAyanda.wdShareFile(mNearbyMedia);
+            if (mNearbyMedia != null) {
+                if (mAyanda.isWdEnabled())
+                    mAyanda.wdShareFile(mNearbyMedia);
 
-            if (mAyanda.isLanEnabled())
-                mAyanda.lanShare(mNearbyMedia);
+                if (mAyanda.isLanEnabled())
+                    mAyanda.lanShare(mNearbyMedia);
 
-            if (mAyanda.isBtEnabled())
-                mAyanda.btAnnounce();
-
+                if (mAyanda.isBtEnabled())
+                    mAyanda.btAnnounce();
+            }
 
         } catch (IOException e) {
             Log.e(TAG,"error setting server and sharing file",e);
@@ -375,6 +377,7 @@ public abstract class AyandaActivity extends AppCompatActivity {
         public void onClick(View view) {
 
             mProgress.setInnerBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
+            mProgress.setTextColor(getResources().getColor(android.R.color.white));
 
             connectToDevice(mDevice);
 
