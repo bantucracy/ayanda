@@ -22,9 +22,13 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
@@ -53,6 +57,8 @@ public class WifiDirect extends P2P {
 
     private final static String TAG = "AyandaWifiDirect";
 
+    private IServer mServer = null;
+
     /**
      * Creates a WifiDirect instance
      *
@@ -66,6 +72,11 @@ public class WifiDirect extends P2P {
         // IntentFilter for receiver
         createIntent();
         createReceiver();
+    }
+
+    public void setServer (IServer server)
+    {
+        mServer = server;
     }
 
 
@@ -94,6 +105,7 @@ public class WifiDirect extends P2P {
         });
 
         setDeviceName(SERVICE_NAME_BASE + iWifiDirect.getPublicName(),wifiP2pManager,wifiDirectChannel);
+
 
     }
 
@@ -204,13 +216,14 @@ public class WifiDirect extends P2P {
         if (networkInfo.isConnected()) {
             // We are connected with the other device, request connection
             // info to find group owner IP
-            // TODO Find group owner port
             wifiP2pManager.requestConnectionInfo(wifiDirectChannel, new WifiP2pManager.ConnectionInfoListener() {
                 @Override
                 public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
                     if (wifiP2pInfo.groupFormed) {
                         isGroupOwner = wifiP2pInfo.isGroupOwner;
                         groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
+
+                        startRegistrationAndDiscovery(getIpAddress(),mServer.getPort());
 
                         if (isGroupOwner) {
                             isServer = true;
@@ -441,7 +454,7 @@ public class WifiDirect extends P2P {
 
     public void startRegistrationAndDiscovery(String serverIP, int port) {
 
-        String player = "My Cool Guy Name";
+        String player = SERVICE_NAME_BASE + iWifiDirect.getPublicName();
 
         Map<String, String> record = new HashMap<String, String>();
         record.put(TransferConstants.KEY_BUDDY_NAME, player == null ? Build.MANUFACTURER : player);
@@ -504,8 +517,10 @@ public class WifiDirect extends P2P {
                             WifiP2pDevice device) {
                         boolean isGroupOwner = device.isGroupOwner();
 
+                        String buddyName = record.get(TransferConstants.KEY_BUDDY_NAME).toString();
                         int peerPort = Integer.parseInt(record.get(TransferConstants.KEY_PORT_NUMBER).toString());
                         String peerIP= record.get(TransferConstants.KEY_WIFI_IP).toString();
+
 
                         Log.v(TAG, Build.MANUFACTURER + ". peer port received: " + peerPort);
                         /**
@@ -550,4 +565,95 @@ public class WifiDirect extends P2P {
             }
         });
     }
+
+    public static String getIpAddress() {
+        try {
+            List<NetworkInterface> interfaces = Collections
+                    .list(NetworkInterface.getNetworkInterfaces());
+            /*
+             * for (NetworkInterface networkInterface : interfaces) { Log.v(TAG,
+             * "interface name " + networkInterface.getName() + "mac = " +
+             * getMACAddress(networkInterface.getName())); }
+             */
+
+            for (NetworkInterface intf : interfaces) {
+                /**
+                if (!getMACAddress(intf.getName()).equalsIgnoreCase(
+                        Globals.thisDeviceAddress)) {
+                    // Log.v(TAG, "ignore the interface " + intf.getName());
+                    // continue;
+                }**/
+                if (!intf.getName().contains("p2p"))
+                    continue;
+
+                Log.v(TAG,
+                        intf.getName() + "   " + getMACAddress(intf.getName()));
+
+                List<InetAddress> addrs = Collections.list(intf
+                        .getInetAddresses());
+
+                for (InetAddress addr : addrs) {
+                    // Log.v(TAG, "inside");
+
+                    if (!addr.isLoopbackAddress()) {
+
+                        boolean isIPv4 = addr instanceof Inet4Address;
+
+                        if (isIPv4) {
+                            // Log.v(TAG, "isnt loopback");
+                            String sAddr = addr.getHostAddress().toUpperCase();
+                            Log.v(TAG, "ip=" + sAddr);
+
+                            if (sAddr.contains("192.168.49.")) {
+                                Log.v(TAG, "ip = " + sAddr);
+                                return sAddr;
+                            }
+                        }
+
+                    }
+
+                }
+            }
+
+        } catch (Exception ex) {
+            Log.v(TAG, "error in parsing");
+        } // for now eat exceptions
+        Log.v(TAG, "returning empty ip address");
+        return "";
+    }
+
+    public static String getMACAddress(String interfaceName) {
+        try {
+            List<NetworkInterface> interfaces = Collections
+                    .list(NetworkInterface.getNetworkInterfaces());
+
+            for (NetworkInterface intf : interfaces) {
+                if (interfaceName != null) {
+                    if (!intf.getName().equalsIgnoreCase(interfaceName))
+                        continue;
+                }
+                byte[] mac = intf.getHardwareAddress();
+                if (mac == null)
+                    return "";
+                StringBuilder buf = new StringBuilder();
+                for (int idx = 0; idx < mac.length; idx++)
+                    buf.append(String.format("%02X:", mac[idx]));
+                if (buf.length() > 0)
+                    buf.deleteCharAt(buf.length() - 1);
+                return buf.toString();
+            }
+        } catch (Exception ex) {
+        } // for now eat exceptions
+        return "";
+        /*
+         * try { // this is so Linux hack return
+         * loadFileAsString("/sys/class/net/" +interfaceName +
+         * "/address").toUpperCase().trim(); } catch (IOException ex) { return
+         * null; }
+         */
+    }
+
+
+
+
 }
