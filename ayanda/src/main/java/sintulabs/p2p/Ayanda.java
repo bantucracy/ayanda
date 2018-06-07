@@ -273,7 +273,8 @@ public class Ayanda {
             this.host = serviceInfo.getHost();
             this.serviceInfo = serviceInfo;
             this.name = parseName(serviceInfo.getServiceName());
-            this.address = host.getHostAddress();
+            if (host != null)
+                this.address = host.getHostAddress();
 
             type = TYPE_WIFI_LAN;
         }
