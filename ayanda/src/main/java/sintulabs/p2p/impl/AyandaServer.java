@@ -1,4 +1,4 @@
-package sample;
+package sintulabs.p2p.impl;
 
 import android.content.Context;
 import android.os.Environment;
@@ -11,12 +11,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD;
-import sintulabs.p2p.ILan;
 import sintulabs.p2p.IServer;
 import sintulabs.p2p.NearbyMedia;
 
@@ -24,7 +24,7 @@ import sintulabs.p2p.NearbyMedia;
  * Created by sabzo on 3/22/18.
  */
 
-public class MyServer extends NanoHTTPD implements IServer{
+public class AyandaServer extends NanoHTTPD implements IServer {
 
     public final static String SERVICE_DOWNLOAD_FILE_PATH = "/ayanda/file";
     public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/ayanda/meta";
@@ -32,14 +32,14 @@ public class MyServer extends NanoHTTPD implements IServer{
 
     private NearbyMedia fileToShare;
 
-    private int port;
     private Context context;
 
-    public MyServer(Context context, int port) throws java.io.IOException {
+    public AyandaServer(Context context, int port) throws java.io.IOException {
         super(port);
         this.context = context;
-        this.port = port;
         start();
+
+
     }
 
     @Override
@@ -58,14 +58,12 @@ public class MyServer extends NanoHTTPD implements IServer{
         } else if (session.getUri().endsWith(SERVICE_DOWNLOAD_FILE_PATH)) {
             try {
 
-                Response response = NanoHTTPD.newChunkedResponse(NanoHTTPD.Response.Status.OK, fileToShare.mMimeType, new FileInputStream(fileToShare.getFileMedia()));
+                String mimeType = fileToShare.getmMimeType();
+                InputStream is = context.getContentResolver().openInputStream(fileToShare.getMediaUri());
+                Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType, is);
+
                 if (response != null) {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "File sent", Toast.LENGTH_LONG).show();
-                        }
-                    });
+
                 }
                 return response;
 
@@ -87,7 +85,7 @@ public class MyServer extends NanoHTTPD implements IServer{
         }
     }
 
-    private NanoHTTPD.Response uploadFile(NanoHTTPD.IHTTPSession session) {
+    private Response uploadFile(IHTTPSession session) {
         Map<String, String> files = new HashMap<String, String>();
         Log.d("server","inside receive file!");
         try{
@@ -116,18 +114,18 @@ public class MyServer extends NanoHTTPD implements IServer{
             */
 
             return newFixedLengthResponse(
-                    NanoHTTPD.Response.Status.OK, "text/plain", "File successfully uploaded"
+                    Response.Status.OK, "text/plain", "File successfully uploaded"
             );
 
         } catch (Exception e) {
             Log.d("server","error on parseBody" +e.toString());
-            return newFixedLengthResponse(NanoHTTPD.Response.Status.INTERNAL_ERROR, "text/plain", e.getLocalizedMessage());
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getLocalizedMessage());
         }
     }
 
     @Override
     public int getPort() {
-        return this.port;
+        return getListeningPort();
     }
 
     @Override

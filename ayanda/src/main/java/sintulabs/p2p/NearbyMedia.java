@@ -1,5 +1,7 @@
 package sintulabs.p2p;
 
+import android.net.Uri;
+
 import java.io.File;
 
 /**
@@ -10,13 +12,13 @@ public class NearbyMedia {
     public String mTitle;
     public String mMimeType;
     public String mMetadataJson;
-    public File mFileMedia;
+    public Uri mUriMedia;
     public byte[] mDigest;
     public long mLength;
 
-    public void setFileMedia (File fileMedia) {
-        mFileMedia = fileMedia;
-        mDigest = Utils.getDigest(mFileMedia);
+    public void setMediaUri (Uri uriMedia, byte[] digest) {
+        mUriMedia = uriMedia;
+        mDigest = digest;
     }
 
     public String getTitle() {
@@ -35,8 +37,8 @@ public class NearbyMedia {
         this.mMetadataJson = metadataJson;
     }
 
-    public File getFileMedia() {
-        return mFileMedia;
+    public Uri getMediaUri() {
+        return mUriMedia;
     }
 
     public byte[] getDigest() {

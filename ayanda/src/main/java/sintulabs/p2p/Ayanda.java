@@ -4,12 +4,15 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +49,17 @@ public class Ayanda {
         }
     }
 
+    public void connectToDevice (Ayanda.Device device)
+    {
+        if (device.getType() == Device.TYPE_BLUETOOTH)
+            btConnect((BluetoothDevice)device.getServiceInfo());
+        else if (device.getType() == Device.TYPE_WIFI_P2P)
+            wdConnect((WifiP2pDevice) device.getServiceInfo());
+        else if (device.getType() == Device.TYPE_WIFI_LAN) {
+            //no special connection needed
+        }
+    }
+
     /**
      * Discover nearby devices that have made themselves detectable via blue Bluetooth.
      * Discovered devices are stored in a collection of devices found.
@@ -60,6 +74,15 @@ public class Ayanda {
      */
     public void btConnect(BluetoothDevice device) {
        bt.connect(device);
+    }
+
+
+    /**
+     * Connects to a discovered bluetooth device. Role: Client
+     * @param device Bluetooth Device
+     */
+    public void btConnect(Ayanda.Device device) {
+        bt.connect((BluetoothDevice)device.getServiceInfo());
     }
 
     /**
@@ -86,13 +109,6 @@ public class Ayanda {
         bt.announce();
     }
 
-    /**
-     * Get the names of the Bluetooth devices discovered
-     * @return
-     */
-    public Set<String> btGetDeviceNamesDiscovered() {
-        return bt.getDeviceNamesDiscovered();
-    }
 
     public HashMap<String, BluetoothDevice> btGetDevices() {
         return bt.getDeviceList();
@@ -108,8 +124,14 @@ public class Ayanda {
     }
 
 
-    public void lanShare (NearbyMedia media) throws IOException {
-        lan.shareFile(media);
+    public boolean isLanEnabled ()
+    {
+        return lan != null;
+    }
+
+    public boolean isBtEnabled ()
+    {
+        return bt != null;
     }
 
     public void lanAnnounce() {
@@ -146,8 +168,12 @@ public class Ayanda {
         wd.sendData(device, bytes);
     }
 
-    public void wdShareFile (NearbyMedia media) throws IOException {
-        wd.shareFile(media);
+    /**
+     * Connect to a WifiDirect device
+     * @param device
+     */
+    public void wdConnect(WifiP2pDevice device) {
+        wd.connect(device);
     }
 
 
@@ -155,7 +181,7 @@ public class Ayanda {
      * Connect to a WifiDirect device
      * @param device
      */
-    public void wdConnect(WifiP2pDevice device) {
+    public void wdConnect(Ayanda.Device device) {
         wd.connect(device);
     }
 
@@ -170,11 +196,16 @@ public class Ayanda {
         wd.registerReceivers();
     }
 
+    public boolean isWdEnabled  ()
+    {
+        return wd != null;
+    }
+
     public void wdUnregisterReceivers() {
         wd.unregisterReceivers();
     }
 
-    public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
+    public ArrayList<Ayanda.Device> wdGetDevicesDiscovered() {
         return wd.getDevicesDiscovered();
     }
 
@@ -183,18 +214,13 @@ public class Ayanda {
      * @param server A descendant of the server class
      */
     public void setServer(IServer server) {
-        Server.createInstance(server);
-        if (lan != null) {
-            lan.setLocalPort(server.getPort());
-        }
-    }
 
-    /**
-     * Add a user defined Client class. This is used to make calls to the server
-     * @param client
-     */
-    public void setClient(IClient client) {
-        Client.createInstance(client);
+        if (lan != null) {
+            lan.setServer(server);
+        }
+        if (wd != null) {
+            wd.setServer(server);
+        }
     }
 
     public static int findOpenSocket() throws java.io.IOException {
@@ -209,15 +235,71 @@ public class Ayanda {
     public static class Device {
         private InetAddress host;
         private Integer port;
-        NsdServiceInfo serviceInfo;
+        private Object serviceInfo;
 
-        public Device() {
+        private String address;
+        private String name;
 
+        private int type = -1;
+        public final static int TYPE_WIFI_P2P = 1;
+        public final static int TYPE_WIFI_LAN = 2;
+        public final static int TYPE_BLUETOOTH = 3;
+
+        private final static String AYANDA_DEVICE_IDENTIFIER = "Ayanda.";
+
+        public HashMap<String,Device> altDevices = new HashMap<>();
+
+        public Device(BluetoothDevice device) {
+
+            this.name = parseName(device.getName());
+            this.address = device.getAddress();
+
+            type = TYPE_BLUETOOTH;
+            serviceInfo = device;
         }
+
+        public Device(WifiP2pDevice device) {
+
+            this.name = parseName(device.deviceName);
+            this.address = device.deviceAddress;
+
+            type = TYPE_WIFI_P2P;
+            serviceInfo = device;
+        }
+
         public Device(NsdServiceInfo serviceInfo) {
+
             this.port = serviceInfo.getPort();
             this.host = serviceInfo.getHost();
             this.serviceInfo = serviceInfo;
+            this.name = parseName(serviceInfo.getServiceName());
+            if (host != null)
+                this.address = host.getHostAddress();
+
+            type = TYPE_WIFI_LAN;
+        }
+
+        private String parseName (String deviceName)
+        {
+            if (!TextUtils.isEmpty(deviceName))
+                return deviceName.replace(AYANDA_DEVICE_IDENTIFIER,"");
+            else
+                return deviceName;
+        }
+
+        public void addAltDevice (Device device)
+        {
+            altDevices.put(device.getName()+device.getType(),device);
+        }
+
+        public Collection<Device> getAltDevices ()
+        {
+            return altDevices.values();
+        }
+
+        public Object getServiceInfo ()
+        {
+            return serviceInfo;
         }
 
         public InetAddress getHost() {
@@ -229,7 +311,30 @@ public class Ayanda {
         }
 
         public String getName() {
-            return serviceInfo.getServiceName();
+            return name;
+        }
+
+        public int getType () {
+            return type;
+        }
+
+        public String getTypeReadable () {
+
+            switch (type)
+            {
+                case TYPE_WIFI_P2P:
+                    return "Wifi P2P";
+                case TYPE_WIFI_LAN:
+                    return "Wifi Hotspot";
+                case TYPE_BLUETOOTH:
+                    return "Bluetooth";
+            }
+
+            return null;
+        }
+
+        public String getDeviceId () {
+            return name + "@" + address;
         }
 
     }

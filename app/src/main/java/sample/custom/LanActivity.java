@@ -1,4 +1,4 @@
-package sample;
+package sample.custom;
 
 import android.Manifest;
 import android.app.Activity;
@@ -36,7 +36,6 @@ import java.util.List;
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
 import sintulabs.p2p.ILan;
-import sintulabs.p2p.Lan;
 import sintulabs.p2p.NearbyMedia;
 import sintulabs.p2p.Neighbor;
 import sintulabs.p2p.WifiDirect;
@@ -77,6 +76,12 @@ public class LanActivity extends AppCompatActivity {
         createView();
         setListeners();
         a = new Ayanda(this, null, new ILan() {
+
+            public String getPublicName ()
+            {
+                return "Ayanda LAN Device";
+            }
+
             @Override
             public void deviceListChanged() {
                 peers.clear();
@@ -88,17 +93,6 @@ public class LanActivity extends AppCompatActivity {
                     Ayanda.Device d = (Ayanda.Device) peers.get(i);
                     peersAdapter.add(d.getName());
                 }
-            }
-
-            @Override
-            public void transferComplete(Neighbor neighbor, NearbyMedia media) {
-
-            }
-
-            @Override
-            public void transferProgress(Neighbor neighbor, File fileMedia, String title,
-                                         String mimeType, long transferred, long total) {
-
             }
 
             @Override
@@ -266,17 +260,13 @@ public class LanActivity extends AppCompatActivity {
             nearbyMedia.setMimeType("image/jpeg");
             nearbyMedia.setTitle("pic");
 
-            nearbyMedia.setFileMedia(new File(filePath));
+        //    nearbyMedia.setFileMedia(new File(filePath));
 
             //get a JSON representation of the metadata we want to share
             Gson gson = new GsonBuilder()
                     .setDateFormat(DateFormat.FULL, DateFormat.FULL).create();
             nearbyMedia.mMetadataJson = gson.toJson("key:value");
-            try {
-                a.lanShare(nearbyMedia);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
         }
     }
 

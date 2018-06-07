@@ -22,4 +22,7 @@ public interface IBluetooth {
     void dataRead(byte[] bytes, int numRead);
     // connected to a device
     void connected(BluetoothDevice device);
+
+    public String getPublicName ();
+
 }

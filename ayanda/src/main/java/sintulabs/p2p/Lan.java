@@ -32,23 +32,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by sabzo on 12/26/17.
  */
 
 public class Lan extends P2P {
+
     // constants for identifying service and service type
-    public final static String SERVICE_NAME_DEFAULT = "NSDaya";
-    public final static String SERVICE_TYPE = "_http._tcp.";
-
-    public final static String SERVICE_DOWNLOAD_FILE_PATH = "/nearby/file";
-    public final static String SERVICE_DOWNLOAD_METADATA_PATH = "/nearby/meta";
-
+    public final static String SERVICE_TYPE = "_ayanda._tcp.";//"_ayanda._http._tcp.";
 
     // For discovery
     private NsdManager.DiscoveryListener mDiscoveryListener;
     // For announcing service
-    private int localPort = 0;
+    private IServer mServer;
     private Context mContext;
     private String mServiceName;
     private NsdManager.RegistrationListener mRegistrationListener;
@@ -74,8 +72,8 @@ public class Lan extends P2P {
         clientID = getWifiAddress(context);
     }
 
-    public void setLocalPort(int port) {
-        this.localPort = port;
+    public void setServer(IServer server) {
+        mServer = server;
     }
 
     @Override
@@ -93,29 +91,26 @@ public class Lan extends P2P {
         String msg;
         // Create the NsdServiceInfo object, and populate it.
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
-        if (Server.server == null) {
-            msg = "No Server implementation found";
-            Log.d(TAG_DEBUG, msg);
+
+        // The name is   subject to change based on conflicts
+        // with other services advertised on the same network.
+        serviceInfo.setServiceName(SERVICE_NAME_BASE + iLan.getPublicName());
+        serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setPort(mServer.getPort());
+
+        mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
+
+        if (mRegistrationListener == null)
+            initializeRegistrationListener();
+
+        if (!serviceAnnounced) {
+            mNsdManager.registerService(
+                    serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+            msg = "Announcing on LAN: " + iLan.getPublicName() + " : " + SERVICE_TYPE + "on port: " + String.valueOf(mServer.getPort());
         } else {
-            // The name is   subject to change based on conflicts
-            // with other services advertised on the same network.
-            serviceInfo.setServiceName(SERVICE_NAME_DEFAULT);
-            serviceInfo.setServiceType(SERVICE_TYPE);
-            serviceInfo.setPort(localPort);
-
-            mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
-
-            if (mRegistrationListener == null)
-                initializeRegistrationListener();
-
-            if (!serviceAnnounced) {
-                mNsdManager.registerService(
-                        serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
-                msg = "Announcing on LAN: " + SERVICE_NAME_DEFAULT + " : " + SERVICE_TYPE + "on port: " + String.valueOf(localPort);
-            } else {
-                msg = "Service already announced";
-            }
+            msg = "Service already announced";
         }
+
 
         Log.d(TAG_DEBUG, msg);
     }
@@ -153,6 +148,8 @@ public class Lan extends P2P {
             @Override
             public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 // Unregistration failed.  Put debugging code here to determine why.
+                Log.e(TAG_DEBUG, "Error unregistering service " + Integer.toString(errorCode));
+
             }
         };
     }
@@ -176,19 +173,24 @@ public class Lan extends P2P {
             }
 
             @Override
-            public void onServiceFound(NsdServiceInfo service) {
+            public void onServiceFound(final NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d(TAG_DEBUG, "Service discovery success" + service);
                 String hash = service.getServiceName();
 
+                if (service.getHost() != null && service.getHost().isAnyLocalAddress())
+                    return;
+
                 if (servicesDiscovered.contains(hash)) {
                     Log.d(TAG_DEBUG, "Service already discovered");
-                    updateDeviceList();
+
                     // Service already discovered -- ignore it!
                 }
                 // Make sure service is the expect type and name
                 else if (service.getServiceType().equals(SERVICE_TYPE) &&
-                        service.getServiceName().contains(SERVICE_NAME_DEFAULT)) {
+                        service.getServiceName().contains(SERVICE_NAME_BASE)) {
+
+                    servicesDiscovered.add(hash);
 
                     mNsdManager.resolveService(service, new NsdManager.ResolveListener() {
 
@@ -201,18 +203,21 @@ public class Lan extends P2P {
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
                             Log.e(TAG_DEBUG, "Resolve Succeeded. " + serviceInfo);
-                            Ayanda.Device d = new Ayanda.Device(serviceInfo);
-                            addDeviceToList(d);
-                            updateDeviceList();
-                            iLan.serviceResolved(serviceInfo);
-                            Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
+
+                            if (serviceInfo.getHost() != null && (!serviceInfo.getHost().getHostAddress().equals(clientID))) {
+                                Ayanda.Device d = new Ayanda.Device(serviceInfo);
+                                addDeviceToList(d);
+                                updateDeviceList();
+                                iLan.serviceResolved(serviceInfo);
+                                Log.d(TAG_DEBUG, "Discovered Service: " + serviceInfo);
+
                         /* FYI; ServiceType within listener doesn't have a period at the end.
                          outside the listener it does */
-                            servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
+                                servicesDiscovered.add(serviceInfo.getServiceName() + serviceInfo.getServiceType());
+                            }
                         }
                     });
                 }
-                servicesDiscovered.add(hash);
             }
 
 
@@ -236,14 +241,14 @@ public class Lan extends P2P {
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
                 isDiscovering = false;
                 Log.e(TAG_DEBUG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
+                //mNsdManager.stopServiceDiscovery(this);
             }
 
             @Override
             public void onStopDiscoveryFailed(String serviceType, int errorCode) {
                 isDiscovering = false;
                 Log.e(TAG_DEBUG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
+              //  mNsdManager.stopServiceDiscovery(this);
             }
         };
 
@@ -295,7 +300,15 @@ public class Lan extends P2P {
 
     public void stopDiscovery() {
         if (mDiscoveryListener != null) {
-            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+
+            try {
+                if (mDiscoveryListener != null)
+                    mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+            }
+            catch (IllegalArgumentException iae)
+            {
+                Log.d(getClass().getName(),"Error stopping LAN discovery",iae);
+            }
             mDiscoveryListener = null;
             servicesDiscovered.clear();
             isDiscovering = false;
@@ -318,31 +331,6 @@ public class Lan extends P2P {
         return sbUrl;
     }
 
-    /* Create a Request Object */
-    private Request buildRequest(StringBuilder url) {
-        return new Request.Builder().url(url.toString())
-                .addHeader("NearbyClientId", clientID).build();
-    }
-
-    private File createFile(String mTitle) {
-        File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        return new File(dirDownloads, new Date().getTime() + "." + mTitle);
-    }
-
-    private void setFileExtension(NearbyMedia media) {
-        String fileExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(media.mMimeType);
-
-        if (fileExt == null) {
-            if (media.mMimeType.startsWith("image"))
-                fileExt = "jpg";
-            else if (media.mMimeType.startsWith("video"))
-                fileExt = "mp4";
-            else if (media.mMimeType.startsWith("audio"))
-                fileExt = "m4a";
-        }
-        media.mTitle += "." + fileExt;
-    }
-
     /* Use WiFi Address as a unique device id */
     private String getWifiAddress(Context context) {
         Context applicationContext = context.getApplicationContext();
@@ -363,11 +351,5 @@ public class Lan extends P2P {
         return deviceList;
     }
 
-    /* Share file with nearby devices */
-    public void shareFile(NearbyMedia media) throws IOException {
-        //this.fileToShare = media;
-        Server.getInstance().setFileToShare(media);
-        announce();
-    }
 
 }
