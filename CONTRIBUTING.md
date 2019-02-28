@@ -40,8 +40,7 @@ _you should see branches on origin as well as upstream, including 'master'_
     
 ### Pull Requests
 Pull requests are the main part of contributing to open source.Verify that there are no conflicts of your forked repo with the base repo and make a pull request adding the description of the feature you have added and wait for the maintainer to merge the request for you.If the pull request satisfies all the properties it is then merged with the base repo and 
-##congratulations
-you have become a member of contributors to the repo.
+CONGRATULATIONS now you have become a member of contributors to the repo.
 
 #### Pull Request Process
  1. Always work on your own fork of the repository and open pull requests when necessary.
