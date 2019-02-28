@@ -36,3 +36,17 @@ _you should see branches on origin as well as upstream, including 'master'_
 * Assuming your pull request is merged into the 'upstream' master, you will actually end up pulling that change into your own master eventually, and at that time, you may decide to delete the topic branch from your local repository and your fork (origin) if you pushed it there.
     - to delete the local branch: `git branch -d example_branch`
     - to delete the branch from your origin: `git push origin :example_branch`
+    
+    
+### Pull Requests
+Pull requests are the main part of contributing to open source.Verify that there are no conflicts of your forked repo with the base repo and make a pull request adding the description of the feature you have added and wait for the maintainer to merge the request for you.If the pull request satisfies all the properties it is then merged with the base repo and 
+##congratulations
+you have become a member of contributors to the repo.
+
+#### Pull Request Process
+ 1. Always work on your own fork of the repository and open pull requests when necessary.
+ 2. Ensure any install or build dependencies are removed before the end of the layer when doing a build.
+ 3. When working on a bug/issue , open a pull request as soon as you start working and mark
+ it as `[WIP]` (Work in Progress), so that the developers can keep an eye on the work going on.
+ 4. Update the README.md with details of changes to the interface, this includes new environment variables, new classes, algorithms, useful file locations and container parameters.
+ 5. You may merge the Pull Request in once you have the sign-off of the maintainers, or if you do not have permission to do that, you may request the maintainer to do it for you.
