@@ -143,7 +143,8 @@ Sharing a file (bytes) using Bluetooth
 ```
 See Example App in the app folder for more implementation details.
 
-
+## Contributing
+See `CONTRIBUTING.md`.
 
 ## License
 

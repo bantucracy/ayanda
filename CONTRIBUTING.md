@@ -49,3 +49,7 @@ Pull requests are the main part of contributing to open source.Verify that there
  it as `[WIP]` (Work in Progress), so that the developers can keep an eye on the work going on.
  4. Update the README.md with details of changes to the interface, this includes new environment variables, new classes, algorithms, useful file locations and container parameters.
  5. You may merge the Pull Request in once you have the sign-off of the maintainers, or if you do not have permission to do that, you may request the maintainer to do it for you.
+
+#### Communication
+To report a problem view the existing [issues](https://github.com/sabzo/ayanda/issues) 
+or create a new issue if it isn't already there.
