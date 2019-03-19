@@ -1,4 +1,10 @@
-## How to start contributing?
+# How to start contributing?
+
+## Familiarity
+* Familiarize yourself with the [Android libraries](https://developer.android.com/training/connect-devices-wirelessly)
+used in this project: Network Service Discovery (LAN), [WiFi Direct]
+(https://developer.android.com/training/connect-devices-wirelessly/wifi-direct) and
+[Bluetooth](https://developer.android.com/guide/topics/connectivity/bluetooth).
 
 ## Fork the Repository
 
@@ -53,3 +59,11 @@ Pull requests are the main part of contributing to open source.Verify that there
 #### Communication
 To report a problem view the existing [issues](https://github.com/sabzo/ayanda/issues) 
 or create a new issue if it isn't already there.
+
+#### Testing
+The goal of testing is to ensure that multiple Android devices can discover each other and communicate
+with each other by sharing files between each other. Discovering and Sending can be achieved through
+Bluetooth, Network Service Discovery (Local Area Network), Wifi Direct.
+
+* two or more android devices (or an Android emulator that has bluetooth, gps and wifi functionality).
+This project includes a sample test app that allows file sharing by Bluetooth, LAN, and WifiDirect.
