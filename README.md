@@ -1,7 +1,7 @@
 # *Ayanda*
 
 **Ayanda**  Ayanda is an Open Source Android Library that makes it easy to discover nearby devices and share files
-through a simple API. Ayanda is meant to detect nearby devices using WiFi and Bluetooth technolgy.
+through a simple API. Ayanda is meant to detect nearby devices using WiFi and Bluetooth technology.
 
 ## Usage
  The example app in shows how to use Ayanda to discover devices on the local network, through Wifi Direct
@@ -143,7 +143,8 @@ Sharing a file (bytes) using Bluetooth
 ```
 See Example App in the app folder for more implementation details.
 
-
+## Contributing
+See `CONTRIBUTING.md`.
 
 ## License
 
