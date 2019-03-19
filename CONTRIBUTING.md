@@ -2,8 +2,8 @@
 
 ## Familiarity
 * Familiarize yourself with the [Android libraries](https://developer.android.com/training/connect-devices-wirelessly)
-used in this project: Network Service Discovery (LAN), [WiFi Direct]
-(https://developer.android.com/training/connect-devices-wirelessly/wifi-direct) and
+used in this project: Network Service Discovery (LAN),
+[WiFi Direct](https://developer.android.com/training/connect-devices-wirelessly/wifi-direct) and
 [Bluetooth](https://developer.android.com/guide/topics/connectivity/bluetooth).
 
 ## Fork the Repository
@@ -67,3 +67,6 @@ Bluetooth, Network Service Discovery (Local Area Network), Wifi Direct.
 
 * two or more android devices (or an Android emulator that has bluetooth, gps and wifi functionality).
 This project includes a sample test app that allows file sharing by Bluetooth, LAN, and WifiDirect.
+
+Try sharing files using all three methods -- note the successes and failures. If you experience errors
+run the app in debug mode and note the errors in an existing issue (or a new one if the issue isn't noted).
