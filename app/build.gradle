@@ -17,6 +17,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    testOptions {
+        unitTests.all {
+            testOptions.unitTests.includeAndroidResources = true
+            systemProperty 'robolectric.enabledSdks', '21'
+        }
+    }
 }
 
 dependencies {
@@ -28,4 +35,6 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
     testCompile 'junit:junit:4.12'
     compile project(':ayanda')
+
+    testCompile "org.robolectric:robolectric:4.3"
 }
