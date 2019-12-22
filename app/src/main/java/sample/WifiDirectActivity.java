@@ -8,9 +8,8 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -35,7 +34,6 @@ import java.util.List;
 
 import sintulabs.ayanda.R;
 import sintulabs.p2p.Ayanda;
-import sintulabs.p2p.Client;
 import sintulabs.p2p.IWifiDirect;
 import sintulabs.p2p.NearbyMedia;
 import sintulabs.p2p.Server;
