@@ -1,1 +1,1 @@
-include ':app', ':ayanda'
+include ':ayanda'
