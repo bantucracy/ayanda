@@ -3,15 +3,24 @@
 **Ayanda**  Ayanda is an Open Source Android Library that makes it easy to discover nearby devices and share files
 through a simple API. Ayanda is meant to detect nearby devices using WiFi and Bluetooth technology.
 
+This library relies on interfaces to add custom functionality, the main Bluetooth, Wifi, and LAN functionality
+is enclosed within the Ayanda class.
+
 ## Usage
- The example app in shows how to use Ayanda to discover devices on the local network, through Wifi Direct
+ [The example app](https://github.com/bantucracy/ayanda/tree/c6399d5fbbb9c74a1ba5868384b1be724cc68ea0/app/src/main/java/sample) shows how to use Ayanda to discover devices on the local network, through Wifi Direct
 and through Bluetooth classic. Actions to be taken when nearby devices are discovered by each discovery method
 are defined by user defined interfaces.
 
 ```java
-/* Ex: Discovering Devices on Local Network */
+/* Ex: Discovering Devices on Local Network
+  *peers* is an ArrayList to store Lan peers discovered.
+
+*/
 
 // Define how to respond when nearby devices are discovered on network
+private List peers = new ArrayList();
+private List peerNames = new ArrayList();
+private ArrayAdapter<String> peersAdapter = null;
 ILan iLan = new ILan() {
     @Override
     public void deviceListChanged() {
@@ -62,6 +71,9 @@ try {
 Discovering nearby devices by WifiDirect
 ```java
 /* Discovering nearby devices by WifiDirect */
+private List peers = new ArrayList();
+private List peerNames = new ArrayList();
+private ArrayAdapter<String> peersAdapter = null;
 
 a = new Ayanda(this, null, null, new IWifiDirect() {
         @Override
@@ -94,6 +106,10 @@ a.wdDiscover();
 ```
 Sharing a file (bytes) using Bluetooth
 ```java
+private List peers = new ArrayList();
+private List peerNames = new ArrayList();
+private ArrayAdapter<String> peersAdapter = null;
+
   a = new Ayanda(this, new IBluetooth() {
             @Override
             public void actionDiscoveryStarted(Intent intent) {}
