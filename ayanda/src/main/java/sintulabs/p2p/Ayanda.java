@@ -159,11 +159,23 @@ public class Ayanda {
         wd.connect(device);
     }
 
+    /* After Ayanda Wifi Direct has been initalized, check to see if device supports WifiDirect */
+    public Boolean isWDEnabled() {
+        return wd.isEnabled() && wd.isSupported();
+    }
     /**
      * Discover nearby WiFi Direct enabled devices
      */
     public void wdDiscover() {
         wd.discover();
+    }
+
+    public boolean isWDClient() {
+        return wd.getIsClient();
+    }
+
+    public boolean isWDServer() {
+        return wd.getIsServer();
     }
 
     public void wdRegisterReceivers() {

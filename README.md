@@ -159,6 +159,22 @@ private ArrayAdapter<String> peersAdapter = null;
 ```
 See Example App in the app folder for more implementation details.
 
+### Objectives
+Objective 1: Stabilization and Refactoring
+
+The Ayanda library has a working proof of concept for discovery, pairing and communication using Bluetooth classic, LAN and Wifi Direct. However, the proof of concept needs to be stabilized by refactoring, adding unit tests, documentation, and user acceptance testing. 
+ * [*] Refactor Android Libraries: Update to Android X & Implmement best practices
+ * [ ] Unit Testing
+ * [ ] Github Wiki documentation
+ * [ ] User Acceptance Testing using Multiple Android devices
+  * [ ] Service discovery using Bluetooth, LAN, Wifi
+  * [ ] Service broadcast using Bluetooth, LAN, Wifi
+
+Activity 1 (code sprint): 
+Refactoring: this phase is the initial work to be done and it is meant to update old libraries and code and to create unity and clear expectations within the library. One major inconsistency is that there are different processes required to discover nearby devices when using different versions of Android. This should be refactored so the discovery, pairing and communication are abstracted to the user. This will be the initial work done on Ayanda. 
+
+Activity 2 (code sprint):
+Unit Tests:  Unit Tests are needed for Ayanda in order to stabilize it and to address the inconsistencies of varying Android versions and devices. This foundational work will make it easier for community members to participate in the development of Ayanda and will become part of the standard routine for any new feature.
 ## Contributing
 See `CONTRIBUTING.md`.
 

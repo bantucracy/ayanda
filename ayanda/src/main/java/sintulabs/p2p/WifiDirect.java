@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
+import static android.content.Context.WIFI_P2P_SERVICE;
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED;
 
@@ -47,7 +48,7 @@ public class WifiDirect extends P2P {
 
     /**
      * Creates a WifiDirect instance
-     * @param context activity/application contex
+     * @param context activity/application context
      * @param iWifiDirect an inteface to provide callbacks to WiFi Direct events
      */
     public WifiDirect(Context context, IWifiDirect iWifiDirect) {
@@ -59,25 +60,11 @@ public class WifiDirect extends P2P {
         createReceiver();
     }
 
-    public void setServerport(int port) {
-        this.serverPort = port;
-    }
-    /**
-     * Create intents for default WiFi direct actions
-     */
-    private void createIntent() {
-        intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-    }
-
     /**
      *  Create WifiP2pManager and Channel
      */
     private void initializeWifiDirect() {
-        wifiP2pManager = (WifiP2pManager) context.getSystemService(context.WIFI_P2P_SERVICE);
+        wifiP2pManager = (WifiP2pManager) context.getSystemService(WIFI_P2P_SERVICE);
         wifiDirectChannel = wifiP2pManager.initialize(context, context.getMainLooper(), new WifiP2pManager.ChannelListener() {
             @Override
             public void onChannelDisconnected() {
@@ -116,6 +103,28 @@ public class WifiDirect extends P2P {
 
         };
     }
+
+    private void setDeviceName(String deviceName) {
+
+        // todo  set device name
+    }
+
+    public void setServerport(int port) {
+        this.serverPort = port;
+    }
+    /**
+     * Create intents for default WiFi direct actions
+     */
+    private void createIntent() {
+        intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+    }
+
+
+
 
     /**
      * When Wifi Direct is enabled/disabled. Propagates event to WiFi Direct interface
@@ -328,7 +337,7 @@ public class WifiDirect extends P2P {
      * Determines if device is connected and acting as a client
      * @return
      */
-    public Boolean isClient() {
+    public Boolean getIsClient() {
         return isClient;
     }
 
@@ -355,7 +364,7 @@ public class WifiDirect extends P2P {
      */
     @Override
     public Boolean isSupported() {
-        return null;
+        return wiFiP2pEnabled;
     }
 
     /**
@@ -364,6 +373,6 @@ public class WifiDirect extends P2P {
      */
     @Override
     public Boolean isEnabled() {
-        return null;
+        return wiFiP2pEnabled;
     }
 }

@@ -4,23 +4,14 @@ import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
-import android.widget.Toast;
-import fi.iki.elonen.NanoHTTPD;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okio.BufferedSink;
-import okio.Okio;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -318,11 +309,6 @@ public class Lan extends P2P {
         return sbUrl;
     }
 
-    /* Create a Request Object */
-    private Request buildRequest(StringBuilder url) {
-        return new Request.Builder().url(url.toString())
-                .addHeader("NearbyClientId", clientID).build();
-    }
 
     private File createFile(String mTitle) {
         File dirDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
