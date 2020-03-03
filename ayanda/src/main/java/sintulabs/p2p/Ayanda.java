@@ -19,6 +19,7 @@ import java.util.Set;
  */
 
 public class Ayanda {
+    public static Ayanda ayanda;
     private Bluetooth bt;
     private Lan lan;
     private WifiDirect wd;
@@ -33,7 +34,7 @@ public class Ayanda {
      * @param iLan An interface to handle LAN (NSD/Bonjour/ZeroConfig/etc.,) events
      * @param iWifiDirect An interface to handle Wifi Direct events
      */
-    public Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
+    private Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
         this.context = context;
         if (iBluetooth != null) {
             bt = new Bluetooth(context, iBluetooth);
@@ -44,6 +45,12 @@ public class Ayanda {
         if (iWifiDirect != null) {
             wd = new WifiDirect(context, iWifiDirect);
         }
+    }
+
+    public static Ayanda createInstance(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
+        // if ayanda hasn't already been initialized initialize it, otherwise return initialized ayanda
+        ayanda = (ayanda == null) ? ayanda = new Ayanda(context, iBluetooth, iLan, iWifiDirect) : ayanda;
+        return ayanda;
     }
 
     /**
