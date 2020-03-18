@@ -9,12 +9,14 @@ import android.content.IntentFilter;
 
 import android.location.LocationManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.IOException;
@@ -29,8 +31,9 @@ import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_ENABLED;
  * WiFi Direct P2P Class for detecting and connecting to nearby devices
  */
 public class WifiDirect extends P2P {
-    private static WifiP2pManager wifiP2pManager;
-    private static WifiP2pManager.Channel wifiDirectChannel;
+    private  WifiP2pManager wifiP2pManager;
+    private  WifiP2pManager.Channel wifiDirectChannel;
+    private WifiManager wifiManager;
     private Context context;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
@@ -45,6 +48,7 @@ public class WifiDirect extends P2P {
     private int  serverPort = 8080;
     private Boolean isClient = false;
     private Boolean isServer = false;
+    Context applicationContext;
 
     /**
      * Creates a WifiDirect instance
@@ -55,6 +59,8 @@ public class WifiDirect extends P2P {
         this.context = context;
         this.iWifiDirect = iWifiDirect;
         initializeWifiDirect();
+        applicationContext= context.getApplicationContext();
+        wifiManager = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
         // IntentFilter for receiver
         createIntent();
         createReceiver();
@@ -231,6 +237,9 @@ public class WifiDirect extends P2P {
         if (!isLocationOn()) {
             enableLocation(context);
         }
+        if (!wifiManager.isWifiEnabled()) {
+            turnOnWifi(context);
+        }
         wifiP2pManager.discoverPeers(wifiDirectChannel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -242,6 +251,8 @@ public class WifiDirect extends P2P {
                 Log.d("Debug", "failed to look for pears: " + reasonCode);
             }
         });
+
+
     }
 
     /**
@@ -322,6 +333,24 @@ public class WifiDirect extends P2P {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         context.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void turnOnWifi(final Context context) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("Please Turn on your Wifi")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        context.startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
                     }
                 })
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
