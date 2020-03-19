@@ -16,12 +16,18 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
+import android.net.wifi.p2p.nsd.WifiP2pServiceInfo;
+import android.net.wifi.p2p.nsd.WifiP2pServiceRequest;
 import android.provider.Settings;
 import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static android.content.Context.WIFI_P2P_SERVICE;
 import static android.net.wifi.p2p.WifiP2pManager.WIFI_P2P_STATE_DISABLED;
@@ -48,7 +54,10 @@ public class WifiDirect extends P2P {
     private int  serverPort = 8080;
     private Boolean isClient = false;
     private Boolean isServer = false;
-    Context applicationContext;
+    private Context applicationContext;
+    private WifiP2pDnsSdServiceInfo mServiceInfo;
+    private String service_name;
+    private String service_type;
 
     /**
      * Creates a WifiDirect instance
@@ -61,9 +70,11 @@ public class WifiDirect extends P2P {
         initializeWifiDirect();
         applicationContext= context.getApplicationContext();
         wifiManager = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
-        // IntentFilter for receiver
+        service_name = "ayanda";
+        service_type = "_http._tcp";
         createIntent();
         createReceiver();
+        setServiceRequestListeners();
     }
 
     /**
@@ -75,10 +86,56 @@ public class WifiDirect extends P2P {
             @Override
             public void onChannelDisconnected() {
                 // On Disconnect reconnect again
+                Log.d(TAG_DEBUG, "Channel Disconnected: Initializing WifiDirect Again");
                 initializeWifiDirect();
             }
         });
     }
+
+    private void setServiceRequestListeners() {
+        WifiP2pManager.DnsSdTxtRecordListener txtRecordListener = new WifiP2pManager.DnsSdTxtRecordListener() {
+            @Override
+            public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
+                Log.d(TAG_DEBUG, "Discovered Service: onDnsSdTxtRecordAvailable");
+                String identity = txtRecordMap.get("identity_instance");
+            }
+        };
+
+        WifiP2pManager.DnsSdServiceResponseListener serviceListener = new WifiP2pManager.DnsSdServiceResponseListener() {
+            @Override
+            public void onDnsSdServiceAvailable(String instanceName, String registrationType, WifiP2pDevice srcDevice) {
+                Log.d(TAG_DEBUG, "Discovered Service: onDnsSdServiceAvailable");
+            }
+        };
+
+        wifiP2pManager.setDnsSdResponseListeners(wifiDirectChannel, serviceListener, txtRecordListener);
+    }
+
+    /**
+     * Set up service to be discovered through WifiDirect using Pre-association service discovery
+     * This ensures only services we're interested in are discovered
+     */
+    private void _initializeService() {
+        Map<String, String> txtRecords = new HashMap<String, String>();
+        txtRecords.put("ssid", "ayanda");
+        mServiceInfo = WifiP2pDnsSdServiceInfo.newInstance(service_name, service_type, txtRecords);
+    }
+
+    private void _announceService(WifiP2pDnsSdServiceInfo mServiceInfo) {
+        wifiP2pManager.addLocalService(wifiDirectChannel, mServiceInfo, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG_DEBUG, "(Announce) Local Service Added");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG_DEBUG, "(Announce) Failed to add local Ayanda service");
+            }
+        });
+    }
+
+
 
     /**
      * receiver for WiFi direct hardware events
@@ -233,28 +290,6 @@ public class WifiDirect extends P2P {
      * look for nearby peers
      */
 
-    private void discoverPeers() {
-        if (!isLocationOn()) {
-            enableLocation(context);
-        }
-        if (!wifiManager.isWifiEnabled()) {
-            turnOnWifi(context);
-        }
-        wifiP2pManager.discoverPeers(wifiDirectChannel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reasonCode) {
-                Log.d("Debug", "failed to look for pears: " + reasonCode);
-            }
-        });
-
-
-    }
-
     /**
      * Return devices discovered. Method should be called when WIFI_P2P_PEERS_CHANGED_ACTION
      is complete
@@ -380,11 +415,61 @@ public class WifiDirect extends P2P {
 
 
     @Override
-    public void announce() {}
+    public void announce() {
+        // Clear any existing services
+        wifiP2pManager.clearLocalServices(wifiDirectChannel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG_DEBUG, "Cleared Local Services");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG_DEBUG, "(Announce) Failed to clear local services");
+            }
+        });
+        _initializeService();
+        _announceService(mServiceInfo);
+    }
+
 
     @Override
     public void discover() {
-        discoverPeers();
+        if (!isLocationOn()) {
+            enableLocation(context);
+        }
+        if (!wifiManager.isWifiEnabled()) {
+            turnOnWifi(context);
+        }
+        WifiP2pDnsSdServiceRequest mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance(service_name, service_type);
+        // Adds service request to an async queue, so calling mutliple times creates multiple calls to the same service request
+        wifiP2pManager.addServiceRequest(wifiDirectChannel, mServiceRequest, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG_DEBUG, "(Discovery) Successfully added service request");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG_DEBUG, "(Discover) Failed to add service request");
+                // TODO  notify end user of failure to start service discovery
+            }
+        });
+
+        wifiP2pManager.discoverServices(wifiDirectChannel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG_DEBUG, "(Discover) Discovering services");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d("Debug", "(Discover) failed to start service discovery");
+                if (reason == WifiP2pManager.P2P_UNSUPPORTED) {
+                    Log.d(TAG_DEBUG, "P2P isn't supported on this device.");
+                }
+            }
+        });
     }
 
     /**

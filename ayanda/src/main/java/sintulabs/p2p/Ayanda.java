@@ -176,6 +176,7 @@ public class Ayanda {
     public void wdDiscover() {
         wd.discover();
     }
+    public void wdAnnounce() { wd.announce(); }
 
     public boolean isWDClient() {
         return wd.getIsClient();
