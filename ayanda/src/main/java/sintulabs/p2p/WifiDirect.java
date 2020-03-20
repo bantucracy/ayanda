@@ -1,4 +1,4 @@
-package sintulabs.p2p;
+  package sintulabs.p2p;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -18,8 +18,6 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
-import android.net.wifi.p2p.nsd.WifiP2pServiceInfo;
-import android.net.wifi.p2p.nsd.WifiP2pServiceRequest;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -56,8 +54,9 @@ public class WifiDirect extends P2P {
     private Boolean isServer = false;
     private Context applicationContext;
     private WifiP2pDnsSdServiceInfo mServiceInfo;
-    private String service_name;
-    private String service_type;
+    private String serviceName;
+    private String serviceType;
+    private  Map<String, String> txtRecords;
 
     /**
      * Creates a WifiDirect instance
@@ -70,8 +69,8 @@ public class WifiDirect extends P2P {
         initializeWifiDirect();
         applicationContext= context.getApplicationContext();
         wifiManager = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
-        service_name = "ayanda";
-        service_type = "_http._tcp";
+        serviceName = "ayanda";
+        serviceType = "_http._tcp";
         createIntent();
         createReceiver();
         setServiceRequestListeners();
@@ -97,7 +96,10 @@ public class WifiDirect extends P2P {
             @Override
             public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
                 Log.d(TAG_DEBUG, "Discovered Service: onDnsSdTxtRecordAvailable");
-                String identity = txtRecordMap.get("identity_instance");
+                String peerDeviceName = txtRecordMap.get("deviceName");
+                if (peerDeviceName != null) {
+                    Log.d(TAG_DEBUG, "Peer Device Found: " + peerDeviceName);
+                }
             }
         };
 
@@ -115,10 +117,8 @@ public class WifiDirect extends P2P {
      * Set up service to be discovered through WifiDirect using Pre-association service discovery
      * This ensures only services we're interested in are discovered
      */
-    private void _initializeService() {
-        Map<String, String> txtRecords = new HashMap<String, String>();
-        txtRecords.put("ssid", "ayanda");
-        mServiceInfo = WifiP2pDnsSdServiceInfo.newInstance(service_name, service_type, txtRecords);
+    private void _initializeService(Map<String, String> txtRecords) {
+        mServiceInfo = WifiP2pDnsSdServiceInfo.newInstance(serviceName, serviceType, txtRecords);
     }
 
     private void _announceService(WifiP2pDnsSdServiceInfo mServiceInfo) {
@@ -148,28 +148,26 @@ public class WifiDirect extends P2P {
                 switch (action) {
                     case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
                         wifiP2pStateChangedAction(intent);
+                        Log.d(TAG_DEBUG, "WIFI_P2P_STATE_CHANGED_ACTION");
                         break;
 
                     case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
                         wifiP2pPeersChangedAction();
+                        Log.d(TAG_DEBUG, "WIFI_P2P_PEERS_CHANGED_ACTION");
                         break;
 
                     case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
                         wifiP2pConnectionChangedAction(intent);
+                        Log.d(TAG_DEBUG, "WIFI_P2P_CONNECTION_CHANGED_ACTION");
                         break;
                     case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
                         // Respond to this device's wifi state changing
                         wifiP2pThisDeviceChangedAction(intent);
+                        Log.d(TAG_DEBUG, "WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
                         break;
                 }
             }
-
         };
-    }
-
-    private void setDeviceName(String deviceName) {
-
-        // todo  set device name
     }
 
     public void setServerport(int port) {
@@ -185,9 +183,6 @@ public class WifiDirect extends P2P {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
     }
-
-
-
 
     /**
      * When Wifi Direct is enabled/disabled. Propagates event to WiFi Direct interface
@@ -428,10 +423,9 @@ public class WifiDirect extends P2P {
                 Log.d(TAG_DEBUG, "(Announce) Failed to clear local services");
             }
         });
-        _initializeService();
+        _initializeService(txtRecords);
         _announceService(mServiceInfo);
     }
-
 
     @Override
     public void discover() {
@@ -441,7 +435,7 @@ public class WifiDirect extends P2P {
         if (!wifiManager.isWifiEnabled()) {
             turnOnWifi(context);
         }
-        WifiP2pDnsSdServiceRequest mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance(service_name, service_type);
+        WifiP2pDnsSdServiceRequest mServiceRequest = WifiP2pDnsSdServiceRequest.newInstance(serviceName, serviceType);
         // Adds service request to an async queue, so calling mutliple times creates multiple calls to the same service request
         wifiP2pManager.addServiceRequest(wifiDirectChannel, mServiceRequest, new WifiP2pManager.ActionListener() {
             @Override
@@ -472,6 +466,24 @@ public class WifiDirect extends P2P {
         });
     }
 
+    /**
+     * Override service type
+     * @param serviceType
+     */
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    /**
+     * Override service name
+     * @param serviceName
+     */
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+    public void setTxtRecords ( HashMap<String, String> txtRecords) {
+        this.txtRecords = txtRecords;
+    }
     /**
      * is Wifi Direct supported
      * @return
