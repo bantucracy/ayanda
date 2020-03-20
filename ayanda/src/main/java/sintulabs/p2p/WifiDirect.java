@@ -1,5 +1,6 @@
   package sintulabs.p2p;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -7,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
@@ -21,7 +23,11 @@ import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.provider.Settings;
 import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +51,7 @@ public class WifiDirect extends P2P {
     private Boolean isGroupOwner = false;
     private InetAddress groupOwnerAddress;
     private ArrayList <WifiP2pDevice> peers = new ArrayList();
+    private ArrayList <WifiP2pDevice> ayandaPeers = new ArrayList();
     private IWifiDirect iWifiDirect;
 
     private NearbyMedia fileToShare;
@@ -97,9 +104,14 @@ public class WifiDirect extends P2P {
             public void onDnsSdTxtRecordAvailable(String fullDomainName, Map<String, String> txtRecordMap, WifiP2pDevice srcDevice) {
                 Log.d(TAG_DEBUG, "Discovered Service: onDnsSdTxtRecordAvailable");
                 String peerDeviceName = txtRecordMap.get("deviceName");
-                if (peerDeviceName != null) {
-                    Log.d(TAG_DEBUG, "Peer Device Found: " + peerDeviceName);
+                // Sometimes a device can show that does not have a deviceName, this is an invalid state
+                if (!srcDevice.deviceName.isEmpty()) {
+                    wifiP2PAyandaPeersChangedAction(srcDevice);
+                    if (peerDeviceName != null) {
+                        Log.d(TAG_DEBUG, "Peer Device Found: " + peerDeviceName);
+                    }
                 }
+
             }
         };
 
@@ -111,6 +123,20 @@ public class WifiDirect extends P2P {
         };
 
         wifiP2pManager.setDnsSdResponseListeners(wifiDirectChannel, serviceListener, txtRecordListener);
+    }
+
+    private void removeServiceRequest(WifiP2pDnsSdServiceRequest serviceRequest) {
+        wifiP2pManager.removeServiceRequest(wifiDirectChannel, serviceRequest, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG_DEBUG, "Successfully began removeServiceRequest()");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG_DEBUG, "Failed to begin removeServiceRequest()");
+            }
+        });
     }
 
     /**
@@ -150,7 +176,7 @@ public class WifiDirect extends P2P {
                         wifiP2pStateChangedAction(intent);
                         Log.d(TAG_DEBUG, "WIFI_P2P_STATE_CHANGED_ACTION");
                         break;
-
+                    // This discovers ANY wifi direct device, not just those of intended service
                     case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
                         wifiP2pPeersChangedAction();
                         Log.d(TAG_DEBUG, "WIFI_P2P_PEERS_CHANGED_ACTION");
@@ -215,6 +241,28 @@ public class WifiDirect extends P2P {
             });
         }
         iWifiDirect.wifiP2pPeersChangedAction();
+    }
+
+    /**
+     * If an Ayanda peer is found, it will also, by definition, be in the peers list for all hardware
+     * devices that are discoverable by WifiDirect. So to ensure that the Ayanda peer list is always
+     * fresh, cross reference it with the "peers" devices. When ayanda peers have been refreshed, notify client
+     */
+    public void wifiP2PAyandaPeersChangedAction(WifiP2pDevice device) {
+        if (device != null) {
+            ayandaPeers.clear();
+            for (WifiP2pDevice d: peers) {
+                if (d.deviceAddress.contentEquals(device.deviceAddress)) {
+                    ayandaPeers.add(device);
+                }
+            }
+            if (!ayandaPeers.isEmpty()) {
+                iWifiDirect.wifiP2pAyandaPeersChangedAction();
+            }
+        } else {
+            Log.d(TAG_DEBUG, "wifiP2PAyandaPeersChangedAction: device is null");
+        }
+
     }
 
     /**
@@ -286,12 +334,20 @@ public class WifiDirect extends P2P {
      */
 
     /**
-     * Return devices discovered. Method should be called when WIFI_P2P_PEERS_CHANGED_ACTION
+     * Return all Wifi devices discovered. Method should be called when WIFI_P2P_PEERS_CHANGED_ACTION
      is complete
      * @return Arraylist <WifiP2pDevice>
      */
-    public ArrayList<WifiP2pDevice> getDevicesDiscovered() {
+    public ArrayList<WifiP2pDevice> getAllWifiDirectDevicesDiscovered() {
         return peers;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public ArrayList<WifiP2pDevice> getAyandaPeers() {
+        return ayandaPeers;
     }
 
     /**
@@ -408,9 +464,7 @@ public class WifiDirect extends P2P {
        return isServer;
     }
 
-
-    @Override
-    public void announce() {
+    private void _clearLocalServices() {
         // Clear any existing services
         wifiP2pManager.clearLocalServices(wifiDirectChannel, new WifiP2pManager.ActionListener() {
             @Override
@@ -423,8 +477,15 @@ public class WifiDirect extends P2P {
                 Log.d(TAG_DEBUG, "(Announce) Failed to clear local services");
             }
         });
+    }
+
+    @Override
+    public void announce() {
+
         _initializeService(txtRecords);
         _announceService(mServiceInfo);
+         // For some reason in order to announce service, device must also discover()
+       // discover();
     }
 
     @Override

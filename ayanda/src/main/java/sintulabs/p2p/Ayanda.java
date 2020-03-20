@@ -251,7 +251,11 @@ public class Ayanda {
     }
 
     public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
-        return wd.getDevicesDiscovered();
+        return wd.getAllWifiDirectDevicesDiscovered();
+    }
+
+    public ArrayList<WifiP2pDevice> wdGetAyandaPeers() {
+        return wd.getAyandaPeers();
     }
 
     /**

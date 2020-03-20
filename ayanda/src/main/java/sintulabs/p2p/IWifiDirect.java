@@ -10,7 +10,8 @@ import java.net.InetAddress;
 
 public interface IWifiDirect {
     void wifiP2pStateChangedAction(Intent intent);
-    void wifiP2pPeersChangedAction();
+    void wifiP2pPeersChangedAction(); // all wifip2p peers
+    void wifiP2pAyandaPeersChangedAction(); // all "ayanda" wifip2p peers determined by this library
     void wifiP2pConnectionChangedAction(Intent intent);
     void wifiP2pThisDeviceChangedAction(Intent intent);
     void onConnectedAsServer(Server server);
