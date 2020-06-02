@@ -72,11 +72,13 @@ public class Bluetooth extends P2P {
         // ensure to register and unregister receivers
     }
 
+    // can test
     @Override
     public Boolean isSupported() {
        return  (mBluetoothAdapter == null)? false : true;
     }
 
+    // can test by mocking bluetooth adapter
     @Override
     public Boolean isEnabled() {
         return mBluetoothAdapter.isEnabled();
@@ -87,6 +89,8 @@ public class Bluetooth extends P2P {
         ((Activity)context).startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
     }
 
+
+    // can test
     /**
      *  Announce Bluetooth service to Nearby Devices
      */

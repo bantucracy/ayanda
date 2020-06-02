@@ -3,15 +3,24 @@
 **Ayanda**  Ayanda is an Open Source Android Library that makes it easy to discover nearby devices and share files
 through a simple API. Ayanda is meant to detect nearby devices using WiFi and Bluetooth technology.
 
+This library relies on interfaces to add custom functionality, the main Bluetooth, Wifi, and LAN functionality
+is enclosed within the Ayanda class.
+
 ## Usage
- The example app in shows how to use Ayanda to discover devices on the local network, through Wifi Direct
+ [The example app](https://github.com/bantucracy/ayanda/tree/c6399d5fbbb9c74a1ba5868384b1be724cc68ea0/app/src/main/java/sample) shows how to use Ayanda to discover devices on the local network, through Wifi Direct
 and through Bluetooth classic. Actions to be taken when nearby devices are discovered by each discovery method
 are defined by user defined interfaces.
 
 ```java
-/* Ex: Discovering Devices on Local Network */
+/* Ex: Discovering Devices on Local Network
+  *peers* is an ArrayList to store Lan peers discovered.
+
+*/
 
 // Define how to respond when nearby devices are discovered on network
+private List peers = new ArrayList();
+private List peerNames = new ArrayList();
+private ArrayAdapter<String> peersAdapter = null;
 ILan iLan = new ILan() {
     @Override
     public void deviceListChanged() {
@@ -62,6 +71,9 @@ try {
 Discovering nearby devices by WifiDirect
 ```java
 /* Discovering nearby devices by WifiDirect */
+private List peers = new ArrayList();
+private List peerNames = new ArrayList();
+private ArrayAdapter<String> peersAdapter = null;
 
 a = new Ayanda(this, null, null, new IWifiDirect() {
         @Override
@@ -94,6 +106,10 @@ a.wdDiscover();
 ```
 Sharing a file (bytes) using Bluetooth
 ```java
+private List peers = new ArrayList();
+private List peerNames = new ArrayList();
+private ArrayAdapter<String> peersAdapter = null;
+
   a = new Ayanda(this, new IBluetooth() {
             @Override
             public void actionDiscoveryStarted(Intent intent) {}
@@ -143,6 +159,22 @@ Sharing a file (bytes) using Bluetooth
 ```
 See Example App in the app folder for more implementation details.
 
+### Objectives
+Objective 1: Stabilization and Refactoring
+
+The Ayanda library has a working proof of concept for discovery, pairing and communication using Bluetooth classic, LAN and Wifi Direct. However, the proof of concept needs to be stabilized by refactoring, adding unit tests, documentation, and user acceptance testing. 
+ * [*] Refactor Android Libraries: Update to Android X & Implmement best practices
+ * [ ] Unit Testing
+ * [ ] Github Wiki documentation
+ * [ ] User Acceptance Testing using Multiple Android devices
+  * [ ] Service discovery using Bluetooth, LAN, Wifi
+  * [ ] Service broadcast using Bluetooth, LAN, Wifi
+
+Activity 1 (code sprint): 
+Refactoring: this phase is the initial work to be done and it is meant to update old libraries and code and to create unity and clear expectations within the library. One major inconsistency is that there are different processes required to discover nearby devices when using different versions of Android. This should be refactored so the discovery, pairing and communication are abstracted to the user. This will be the initial work done on Ayanda. 
+
+Activity 2 (code sprint):
+Unit Tests:  Unit Tests are needed for Ayanda in order to stabilize it and to address the inconsistencies of varying Android versions and devices. This foundational work will make it easier for community members to participate in the development of Ayanda and will become part of the standard routine for any new feature.
 ## Contributing
 See `CONTRIBUTING.md`.
 

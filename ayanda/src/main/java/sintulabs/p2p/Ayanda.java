@@ -19,10 +19,12 @@ import java.util.Set;
  */
 
 public class Ayanda {
+    public static Ayanda ayanda;
     private Bluetooth bt;
     private Lan lan;
     private WifiDirect wd;
-
+    // User passed in device name
+    private String deviceName;
     private Context context;
 
     /**
@@ -33,7 +35,7 @@ public class Ayanda {
      * @param iLan An interface to handle LAN (NSD/Bonjour/ZeroConfig/etc.,) events
      * @param iWifiDirect An interface to handle Wifi Direct events
      */
-    public Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
+    private Ayanda(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
         this.context = context;
         if (iBluetooth != null) {
             bt = new Bluetooth(context, iBluetooth);
@@ -44,6 +46,35 @@ public class Ayanda {
         if (iWifiDirect != null) {
             wd = new WifiDirect(context, iWifiDirect);
         }
+    }
+
+    /**
+     * To ensure Ayanda is a Singleton Class
+     * @param context
+     * @param iBluetooth
+     * @param iLan
+     * @param iWifiDirect
+     * @return
+     */
+    public static Ayanda createInstance(Context context, IBluetooth iBluetooth, ILan iLan, IWifiDirect iWifiDirect) {
+        // if ayanda hasn't already been initialized initialize it, otherwise return initialized ayanda
+        ayanda = (ayanda == null) ? ayanda = new Ayanda(context, iBluetooth, iLan, iWifiDirect) : ayanda;
+        return ayanda;
+    }
+
+    /**
+     * The device name that will be broadcast to nearby devices
+     * @param deviceName
+     */
+    public void setDeviceName(String deviceName) {
+        if (wd != null) {
+            wd.setDeviceName(deviceName);
+        }
+        this.deviceName = deviceName;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
     }
 
     /**
@@ -159,11 +190,56 @@ public class Ayanda {
         wd.connect(device);
     }
 
+    /* After Ayanda Wifi Direct has been initalized, check to see if device supports WifiDirect */
+    public Boolean isWDEnabled() {
+        return wd.isEnabled() && wd.isSupported();
+    }
     /**
      * Discover nearby WiFi Direct enabled devices
      */
     public void wdDiscover() {
         wd.discover();
+    }
+
+    /**
+     * Announce Service through Wifi Direct
+     * Due to Android functionality, Announce also should call Discover
+     */
+    public void wdAnnounce() {
+        wd.announce();
+    }
+
+    /**
+     * Set the dvice information information that would be shared when announcing service.
+     * @param txtRecords
+     */
+    public void wdSetTxtRecords(HashMap<String, String> txtRecords) {
+        wd.setTxtRecords(txtRecords);
+    }
+
+    /**
+     * This overrides the default Ayanda Service Name (ayanda). If the intention is to provide
+     * a different service name, make sure to call this before Announce() and Discover().
+     * @param serviceName
+     */
+    public void wdSetServiceName(String serviceName) {
+        wd.setServiceName(serviceName);
+    }
+
+    /**
+     * This overrides the default Ayanda Service Type (_http_.tcp). If the intention is to provide
+     * a different service name, make sure to call this before Announce() and Discover().
+     * @param serviceType
+     */
+    public void wdSetServiceType(String serviceType) {
+        wd.setServiceType(serviceType);
+    }
+    public boolean isWDClient() {
+        return wd.getIsClient();
+    }
+
+    public boolean isWDServer() {
+        return wd.getIsServer();
     }
 
     public void wdRegisterReceivers() {
@@ -175,7 +251,11 @@ public class Ayanda {
     }
 
     public ArrayList<WifiP2pDevice> wdGetDevicesDiscovered() {
-        return wd.getDevicesDiscovered();
+        return wd.getAllWifiDirectDevicesDiscovered();
+    }
+
+    public ArrayList<WifiP2pDevice> wdGetAyandaPeers() {
+        return wd.getAyandaPeers();
     }
 
     /**

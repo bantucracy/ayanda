@@ -1,7 +1,4 @@
 <resources>
     <string name="app_name">Ayanda</string>
     <!-- Bluetooth -->
-    <string name="bt_not_supported">Bluetooth not supported</string>
-    <string name="bt_not_enabled">Bluetooth not enabled</string>
-    <string name="bt_enabled">Bluetooth enabled</string>
 </resources>
